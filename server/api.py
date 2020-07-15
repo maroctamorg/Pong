@@ -15,16 +15,18 @@ class Establish(Resource):
 				sessData.seek(0)
 				json.dump(session, sessData)
 				sessData.truncate()
+				return jsonify(sss1wEst=True, sss2wEst=False), 100
 
-
-			elif (session["client2IP"] == " "):
+			elif (session["client2IP"] == " " and session["client1IP"] != request.remote_addr):
 				session["client2IP"] = request.remote_addr
 				sessData.seek(0)
 				json.dump(session, sessData)
 				sessData.truncate()
+				return jsonify(sss1wEst=True, sss2wEst=True), 249
 
 			else:
-				return "Server session is full!"
+				return jsonify(sss1wEst=True, sss2wEst=True), 250
+
 
 class Data(Resource):
 	def get(self):
@@ -35,14 +37,13 @@ class Data(Resource):
 			if (request.remote_addr == session["client1IP"]):
 				with open("client1.json", "r") as dataFile:
 					data = json.load(dataFile)
-	
 					return data, 201
 
 			elif (request.remote_addr == ["client2IP"]):
 				with open("client2.json", "r") as dataFile:
 					data = json.load(dataFile)
 					return data, 201
-		
+
 			else:
 				return 'Unhandled IP:' + session["client1IP"] + '!=' + request.remote_addr + '.\nUndefined game session\n', 300
 
@@ -50,19 +51,27 @@ class Data(Resource):
 
 		with open("sessionData.json", "r") as sessData:
 			session = json.load(sessData)
-
 			dataIn = request.get_json()
 
 			if (request.remote_addr == session["client1IP"]):
 				with open("client1.json", "w") as dataFile:
 					json.dump(dataIn, dataFile)
-	
+				with open("client2.json", "w") as dataFile2:
+					dataOut = json.load(dataFile2)
+					dataOut["rmt_cPos"]["x"] = 800 - dataIn["lcl_cPos"]["x"]
+					dataOut["rmt_cPos"]["y"] = 500 - dataIn["lcl_cPos"]["y"]
+					json.dump(dataOut, dataFile2)
 				return 202
 
-			elif (request.remote_addr == Establish.client2IP):
+			elif (request.remote_addr == session["client2IP"]):
 				with open("client2.json", "w") as dataFile:
 					json.dump(dataIn, dataFile)
-	
+				with open("client1.json", "w") as dataFile2:
+					dataOut = json.load(dataFile2)
+					dataOut["rmt_cPos"]["x"] = 800 - dataIn["lcl_cPos"]["x"]
+					dataOut["rmt_cPos"]["y"] = 500 - dataIn["lcl_cPos"]["y"]
+					json.dump(dataOut, dataFile2)
+
 					return 202
 		
 			else:
