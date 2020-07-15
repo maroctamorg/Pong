@@ -1,3 +1,6 @@
 {
-    "C_Cpp.default.includePath": [ "/Library/Frameworks/Python.framework/Versions/3.8/Headers/" ]
+    "C_Cpp.default.includePath": [
+        "/Library/Frameworks/Python.framework/Versions/3.8/Headers/"
+    ],
+    "python.pythonPath": "/Users/magneto/Studies&Projects/Programming/C++/Pong/PyServeEnv/bin/python3.8"
 }

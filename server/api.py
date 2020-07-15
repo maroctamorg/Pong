@@ -10,22 +10,35 @@ class Establish(Resource):
 		with open("sessionData.json", "r+") as sessData:
 			session = json.load(sessData)
 
-			if (session["client1IP"] == " "):
+			if (session["client1IP"] == " " or session["client1IP"] == request.remote_addr):
 				session["client1IP"] = request.remote_addr
 				sessData.seek(0)
 				json.dump(session, sessData)
 				sessData.truncate()
-				return jsonify(sss1wEst=True, sss2wEst=False), 100
+
+				with open("client1.json", "w") as clientData:
+					client_data = {'lcl_cPos':{'x':80, 'y':50}, 'rmt_cPos':{'x':720, 'y':50}}
+					json.dump(client_data, clientData)
+
+				return jsonify(sss1wEst=True, sss2wEst=False)
 
 			elif (session["client2IP"] == " " and session["client1IP"] != request.remote_addr):
 				session["client2IP"] = request.remote_addr
 				sessData.seek(0)
 				json.dump(session, sessData)
 				sessData.truncate()
-				return jsonify(sss1wEst=True, sss2wEst=True), 249
 
+				with open("client2.json", "w") as clientData:
+					client_data = {'lcl_cPos':{'x':80, 'y':50}, 'rmt_cPos':{'x':720, 'y':50}}
+					json.dump(client_data, clientData)
+					
+				return jsonify(sss1wEst=True, sss2wEst=True)
+
+			elif (session["client1IP"] != session["client2IP"] and (session["client1IP"] != " " and session["client2IP"] != " ")):
+				return jsonify(sss1wEst=True, sss2wEst=True)
+			
 			else:
-				return jsonify(sss1wEst=True, sss2wEst=True), 250
+				return jsonify(sss1wEst=False, sss2wEst=False)
 
 
 class Data(Resource):
@@ -37,12 +50,12 @@ class Data(Resource):
 			if (request.remote_addr == session["client1IP"]):
 				with open("client1.json", "r") as dataFile:
 					data = json.load(dataFile)
-					return data, 201
+					return data
 
 			elif (request.remote_addr == ["client2IP"]):
 				with open("client2.json", "r") as dataFile:
 					data = json.load(dataFile)
-					return data, 201
+					return data
 
 			else:
 				return 'Unhandled IP:' + session["client1IP"] + '!=' + request.remote_addr + '.\nUndefined game session\n', 300

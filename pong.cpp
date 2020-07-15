@@ -129,7 +129,7 @@ int main() {
         std::cout << "Time in gameLoop until HTTP requests:\t" << gLoop.elapsed() << '\n';
 
         FILE *getPy = fopen("httpGet.py", "r");
-        PyRun_SimpleFile(getPy, "httpGet.py");
+        PyRun_SimpleFile(getPy, "http2Get.py");
         fclose(getPy);
 
         std::ifstream iServerData("serverData.json");
