@@ -9,6 +9,6 @@ print("python httpPost is running.\n")
 
 with open('serverData.json', 'r') as f:
         jPost = json.load(f)
-        pR = requests.post('http://192.168.0.24:5000', data = jPost, timeout = 0.010)
+        pR = requests.post('http://192.168.0.24:5000/session', data = jPost, timeout = 0.010)
 
 sys.exit()

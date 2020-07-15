@@ -107,6 +107,10 @@ int main() {
 
     std::cout << "Initialisation time:\t" << init.elapsed() << '\n';
 
+    std::cout << "Establishing session...\n";
+    FILE *establishPy = fopen("httpEstablish.py", "r");
+    PyRun_SimpleFile(establishPy, "httpEstablish.py");
+
     while(!done){
         Timer gLoop;
 
@@ -125,7 +129,7 @@ int main() {
         std::cout << "Time in gameLoop until HTTP requests:\t" << gLoop.elapsed() << '\n';
 
         FILE *getPy = fopen("httpGet.py", "r");
-        PyRun_SimpleFile(getPy, "httGet.py");
+        PyRun_SimpleFile(getPy, "httpGet.py");
         fclose(getPy);
 
         std::ifstream iServerData("serverData.json");
@@ -147,7 +151,7 @@ int main() {
         oServerData << lData;
         oServerData.close();
 
-        FILE *postPy = fopen("httPost.py", "r");
+        FILE *postPy = fopen("httpPost.py", "r");
         PyRun_SimpleFile(postPy, "httpPost.py");
 
         std::cout << "Mouse State obtained: (" << cursorPos.x << ", "<< cursorPos.y << ")\n";
