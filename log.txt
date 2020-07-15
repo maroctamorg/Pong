@@ -1,0 +1,22 @@
+Succesfully initialised SDL window and renderer.
+Initialisation time:	0.410708
+Establishing session...
+python httpEstablish is running.
+
+Time in gameLoop until HTTP requests:	4.9843e-05
+python httpGet is running.
+
+python httpPost is running.
+
+Mouse State obtained: (0, 0)
+Game Loop Length:	0.155359
+Time in gameLoop until HTTP requests:	1.0111e-05
+python httpGet is running.
+
+python httpPost is running.
+
+Mouse State obtained: (0, 0)
+Game Loop Length:	0.312829
+Time in gameLoop until HTTP requests:	1.8835e-05
+python httpGet is running.
+
