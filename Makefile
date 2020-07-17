@@ -1,8 +1,14 @@
-all: compile runCpp
-	compile && runCpp
+all: compile link run
+	compile && link && run
 
 compile:
-	g++ -o pong pong.cpp -F/Library/Frameworks/Python.framework/Versions/3.8/Headers -framework Python -F/Library/Frameworks/SDL2.framework/headers -framework SDL2 -std=c++11
+	g++ -c main.cpp -std=c++11
 
-runCpp:
+link:
+	g++ -o pong main.o -F/Library/Frameworks/SDL2.framework/headers -framework SDL2 -Wl,-stack_size,1000000  -framework CoreFoundation /Library/Frameworks/Python.framework/Versions/3.8/Python 
+
+run:
 	./pong
+
+cleanup:
+	rm main.o && rm pong
