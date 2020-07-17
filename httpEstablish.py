@@ -20,4 +20,6 @@ while (True):
     print(response)
     print(response['sss1wEst'] and response['sss2wEst'])
     if (response['sss1wEst'] and response['sss2wEst']):
+        with open("serverData.json", "w") as serverData:
+            json.dump(response, serverData)
         break

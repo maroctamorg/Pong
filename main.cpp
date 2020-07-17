@@ -61,10 +61,10 @@ class Ball {
     private:
         SDL_Point bPos { 400, 250 };
         SDL_Point bVel { 5, 0 };
-        SDL_Rect bRect { 400, 250, 15, 15 };
+        SDL_Rect bRect { 390, 240, 20, 20 };
     
     public:
-        Ball() = default;
+        Ball(int v): bVel { v, 0 }, bPos { 400, 250 }, bRect { 390, 240, 20, 20 } {};
         
         SDL_Point getPos() {
             return bPos;
@@ -77,6 +77,9 @@ class Ball {
         void move(){
             bPos.x += bVel.x;
             bPos.y += bVel.y;
+
+            bRect.x = bPos.x - 10;
+            bRect.y = bPos.y - 10;
         }
 
         void checkCollision(SDL_Point padPos, bool lcl) {
@@ -105,8 +108,8 @@ class Ball {
                 bVel.x = 5;
             }
 
-            if (bPos.y >= 400) {
-                bPos.y = 400;
+            if (bPos.y >= 500) {
+                bPos.y = 500;
                 bVel.y = -5;
             } else if (bPos.y <= 0) {
                 bPos.y = 0;
@@ -130,9 +133,15 @@ class Ball {
                 }
             }
 
+            bRect.x = bPos.x - 10;
+            bRect.y = bPos.y - 10;
+
         }
 
         void display(SDL_Renderer *renderer) {
+            bRect.x = bPos.x - 10;
+            bRect.y = bPos.y - 10;
+
             SDL_SetRenderDrawColor(renderer, 0, 250, 0, 250);
             SDL_RenderFillRect(renderer, &bRect);
         }
@@ -187,9 +196,19 @@ int main() {
 
     bool done { false };
 
+    std::cout << "Establishing session...\n";
+    FILE *establishPy = fopen("httpEstablish.py", "r");
+    PyRun_SimpleFile(establishPy, "httpEstablish.py");
+    fclose(establishPy);
+
+    std::ifstream iServerData("serverData.json");
+    json sData;
+    iServerData >> sData;
+    iServerData.close();
+
     paddle lcl_paddle;
     paddle rmt_paddle;
-    Ball ball;
+    Ball ball(sData["v"]);
 
     SDL_Rect lcl_goal { 0, 100, 5, 300 };
     SDL_Rect rmt_goal { 795, 100, 5, 300 };
@@ -197,11 +216,6 @@ int main() {
     SDL_Event event;
 
     std::cout << "Initialisation time:\t" << init.elapsed() << '\n';
-
-    std::cout << "Establishing session...\n";
-    FILE *establishPy = fopen("httpEstablish.py", "r");
-    PyRun_SimpleFile(establishPy, "httpEstablish.py");
-    fclose(establishPy);
 
     while(!done){
         Timer gLoop;
@@ -220,63 +234,67 @@ int main() {
 
         std::cout << "Time in gameLoop until HTTP requests:\t" << gLoop.elapsed() << '\n';
 
+        Timer get;
         FILE *getPy = fopen("httpGet.py", "r");
         PyRun_SimpleFile(getPy, "httpGet.py");
         fclose(getPy);
+        std::cout << "httGet.py call\t:" << get.elapsed() << '\n';
 
         std::ifstream iServerData("serverData.json");
         json sData;
         iServerData >> sData;
         iServerData.close();
-        SDL_GetMouseState(&cursorPos.x, &cursorPos.y);
-        std::cout << "Mouse State obtained: (" << cursorPos.x << ", "<< cursorPos.y << ")\n";
         
         json lData;
 
-        lData["done"] = false;
-        lData["lcl_cPos"]["x"] = cursorPos.x;
-        lData["lcl_cPos"]["y"] = cursorPos.y;
         lData["rmt_cPos"]["x"] = sData["rmt_cPos"]["x"];
         lData["rmt_cPos"]["y"] = sData["rmt_cPos"]["y"];
-        lData["ball"]["pos"] = sData["ball"]["pos"];
-        lData["ball"]["vel"] = sData["ball"]["vel"];
+        
+        //lData["ball"]["pos"] = sData["ball"]["pos"];
+        //lData["ball"]["vel"] = sData["ball"]["vel"];
 
+        SDL_Point rmt_cursorPos { sData["rmt_cPos"]["x"], sData["rmt_cPos"]["y"] };
 
-        lcl_paddle.display(renderer, false);
-        rmt_paddle.display(renderer, true);
-        ball.display(renderer);
-
+        SDL_GetMouseState(&cursorPos.x, &cursorPos.y);
+        std::cout << "Mouse State obtained: (" << cursorPos.x << ", "<< cursorPos.y << ")\n";
 
         lcl_paddle.move(cursorPos, false);
-        SDL_Point rmt_cursorPos { sData["rmt_cPos"]["x"], sData["rmt_cPos"]["y"] };
         rmt_paddle.move(rmt_cursorPos, true);
         ball.move();
         ball.checkCollision(lcl_paddle.getPos(), true);
         ball.checkCollision(rmt_paddle.getPos(), false);
 
+        lcl_paddle.display(renderer, false);
+        rmt_paddle.display(renderer, true);
+        ball.display(renderer);
 
+        SDL_RenderPresent(renderer);
+
+        SDL_PollEvent(&event);
+       if (event.type == SDL_QUIT){
+           done = true;
+       }
+
+        lData["done"] = done;
+        lData["lcl_cPos"]["x"] = lcl_paddle.getPos().x;
+        lData["lcl_cPos"]["y"] = lcl_paddle.getPos().y;
+    /*
         lData["ball"]["pos"][0] = ball.getPos().x;
         lData["ball"]["vel"][0] = ball.getVel().x;
         lData["ball"]["pos"][1] = ball.getPos().y;
         lData["ball"]["vel"][1] = ball.getVel().y;
+    */
 
         std::ofstream oServerData("serverData.json", std::fstream::trunc);
         oServerData << lData;
         oServerData.close();
 
+        Timer post;
         FILE *postPy = fopen("httpPost.py", "r");
         PyRun_SimpleFile(postPy, "httpPost.py");
         fclose(postPy);
 
-
-        SDL_RenderPresent(renderer);
-
-        SDL_PollEvent(&event);
-        switch (event.type) {
-            case SDL_QUIT:
-                done = true;
-                break;
-        }
+        std::cout << "httPost.py call\t:" << post.elapsed() << '\n';
         
         std::cout << "Game Loop Length:\t" << gLoop.elapsed() << '\n';
 

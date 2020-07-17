@@ -17,10 +17,10 @@ class Establish(Resource):
 				sessionData.truncate()
 
 				with open("client1.json", "w") as clientData:
-					client_data = {"done":False,"ball":{"pos":[400,250],"vel":[5,0]},"lcl_cPos":{"x":80,"y":50},"rmt_cPos":{"x":720,"y":50}}
+					client_data = {"done":False,"lcl_cPos":{"x":80,"y":50},"rmt_cPos":{"x":720,"y":50}}
 					json.dump(client_data, clientData)
 
-				return jsonify(sss1wEst=True, sss2wEst=False)
+				return jsonify(sss1wEst=True, sss2wEst=False, v=5)
 
 			elif (session["client2IP"] == " " and session["client1IP"] != request.remote_addr):
 				session["client2IP"] = request.remote_addr
@@ -29,22 +29,31 @@ class Establish(Resource):
 				sessionData.truncate()
 
 				with open("client2.json", "w") as clientData:
-					client = {"done":False,"ball":{"pos":[400,250],"vel":[-5,0]},"lcl_cPos":{"x":80,"y":50},"rmt_cPos":{"x":720,"y":50}}
+					client = {"done":False,"lcl_cPos":{"x":80,"y":50},"rmt_cPos":{"x":720,"y":50}}
 					json.dump(client, clientData)
 					
-				return jsonify(sss1wEst=True, sss2wEst=True)
+				return jsonify(sss1wEst=True, sss2wEst=True, v=-5)
 
 			elif ((session["client1IP"] != session["client2IP"]) and (session["client1IP"] != " " and session["client2IP"] != " ")):
 				with open("client1.json", "w") as clientData:
-					client_data = {"done":False,"ball":{"pos":[400,250],"vel":[5,0]},"lcl_cPos":{"x":80,"y":50},"rmt_cPos":{"x":720,"y":50}}
+					client_data = {"done":False,"lcl_cPos":{"x":80,"y":50},"rmt_cPos":{"x":720,"y":50}}
 					json.dump(client_data, clientData)
 				with open("client2.json", "w") as clientData:
-					client_data = {"done":False,"ball":{"pos":[400,250],"vel":[-5,0]},"lcl_cPos":{"x":80,"y":50},"rmt_cPos":{"x":720,"y":50}}
+					client_data = {"done":False,"lcl_cPos":{"x":80,"y":50},"rmt_cPos":{"x":720,"y":50}}
 					json.dump(client_data, clientData)
-				return jsonify(sss1wEst=True, sss2wEst=True)
-			
+					if (request.remote_addr == session["client1IP"]):
+						return jsonify(sss1wEst=True, sss2wEst=True, v=5)
+					elif (request.remote_addr == session["client2IP"]):
+						return jsonify(sss1wEst=True, sss2wEst=True, v=-5)
+
+			elif (session["client1IP"] == request.remote_addr):
+					return jsonify(sss1wEst = True, sss2wEst = False, v = 5)
+
+			elif (session["client2IP"] == request.remote_addr):
+					return jsonify(sss1wEst = True, sss2wEst = False, v = -5)
+					
 			else:
-				return jsonify(sss1wEst=False, sss2wEst=False)
+				return "Unhandled Server Error!"
 
 
 class Data(Resource):
@@ -61,8 +70,8 @@ class Data(Resource):
 						response = data
 						response["rmt_cPos"]["x"] = 800 - data2["lcl_cPos"]["x"]
 						response["rmt_cPos"]["y"] =  data2["lcl_cPos"]["y"]
-						response["ball"]["pos"][0] = 800 - data2["ball"]["pos"][0]
-						response["ball"]["vel"][0] = -data2["ball"]["vel"][0]
+						#response["ball"]["pos"][0] = 800 - data2["ball"]["pos"][0]
+						#response["ball"]["vel"][0] = -data2["ball"]["vel"][0]
 						return response
 
 			elif (request.remote_addr == session["client2IP"]):
