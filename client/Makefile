@@ -1,14 +1,26 @@
-all: compile link run
-	compile && link && run
+CC = g++
+CFLAGS = -std=c++17
+INCLUDE = -I${HOME}/Library/include/asio-1.18.2/include
+FRAMEWORKS = -F/Library/Frameworks
+LINKER_FLAGS = -F/Library/Frameworks/ -framework SDL2
+SOURCES = main.cpp engine/game/pong.cpp
+TARGET = pong_client
+
+all: build run
+
+build: compile link
 
 compile:
-	g++ -c main.cpp -std=c++11
+	${CC} -c ${SOURCES} ${INCLUDE} ${FRAMEWORKS} ${CFLAGS}
+	mv ${SOURCES:.cpp=.o} build/
 
 link:
-	g++ -o pong main.o -F/Library/Frameworks/SDL2.framework/headers -framework SDL2 -Wl,-stack_size,1000000  -framework CoreFoundation /Library/Frameworks/Python.framework/Versions/3.8/Python 
+	${CC} -o ${TARGET} build/${SOURCES:.cpp=.o} ${LINKER_FLAGS}
+	mv ${TARGET} build/
 
 run:
-	./pong
+	build/${TARGET}
 
 cleanup:
-	rm main.o && rm pong
+	mkdir build && touch build/${SOURCES:.cpp=.o} && rm build/${SOURCES:.cpp=.o}
+	mkdir build && touch build/${TARGET} && rm build/${TARGET}
