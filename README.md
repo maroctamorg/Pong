@@ -7,7 +7,7 @@ This is a little demo project that implements a C++ pong client and server based
 Dependencies
 ------------
 
-- [Asio](http://think-async.com/)
+- [Asio] (http://think-async.com/)
 - [SDL2] (https://www.libsdl.org/)
 
 
@@ -19,7 +19,3 @@ Make sure to download the header-only asio library (tested with v.1.18.2), the S
 
 License
 -------
-
-The asio bundled library is covered by its own license:
-
-- Asio - **Boost Software License** (see `server/external/LICENSE/asio.txt`)]
