@@ -1,7 +1,7 @@
 Pong++ - The C++ Pong Online Implementation
 ===========================================
 
-This is a little demo project that implements a C++ pong client and server based on the standalone Asio library and the SDL2 framework, with a custom webserver framework and game and ui engines; aimed at macOS and linux, though it should work on Windows with only minor tweaks.
+This is a little demo project that implements a C++ pong client and server based on the standalone Asio library and the SDL2 framework, with a custom webserver framework, game and ui engines; aimed at macOS and linux, though it should work on Windows with only minor tweaks.
 
 
 Dependencies
