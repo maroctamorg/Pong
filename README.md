@@ -7,8 +7,8 @@ This is a little demo project that implements a C++ pong client and server based
 Dependencies
 ------------
 
-- [Asio] (http://think-async.com/)
-- [SDL2] (https://www.libsdl.org/)
+- **Asio** (http://think-async.com/)
+- **SDL2** (https://www.libsdl.org/)
 
 
 Building the server
