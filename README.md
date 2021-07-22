@@ -1,41 +1,25 @@
-C++ WebSocket Server Demo
-=========================
+Pong++ - The C++ Pong Online Implementation
+===========================================
 
-This is a little demo project that implements a C++ server using the [WebSocket++](https://github.com/zaphoyd/websocketpp) WebSocket library. It was originally created for a [Club++ Workshop](https://github.com/club-plus-plus/websocket-server-workshop), and is provided here so that it might be used as the basis for future projects that require WebSocket server functionality.
+This is a little demo project that implements a C++ pong client and server based on the standalone Asio library and the SDL2 framework, with a custom webserver framework and game and ui engines; aimed at macOS and linux, though it should work on Windows with only minor tweaks.
 
 
 Dependencies
 ------------
 
-The following libraries are bundled in the source tree, under the `server/external` directory:
-
-- [WebSocket++](https://github.com/zaphoyd/websocketpp)
 - [Asio](http://think-async.com/)
-- [JsonCpp](https://github.com/open-source-parsers/jsoncpp)
-
-When compiling under MinGW, [Boost.Thread](http://www.boost.org/doc/libs/release/libs/thread/) is also required, due to a bug in MinGW that prevents WebSocket++ from using C++11 functionality alone (see [this StackOverflow post](http://stackoverflow.com/questions/33662788/undefined-reference-to-stderrcoperation-canceled-when-compiling-websocketp) for details.)
+- [SDL2] (https://www.libsdl.org/)
 
 
 Building the server
 -------------------
 
-Building the server requires a recent version of the [CMake](https://cmake.org/) build system. To build the server, invoke the following commands in the `server` directory:
-
-```
-cmake .
-cmake --build .
-```
-
-When compiling with Visual Studio under Windows, these command need to be run from the *"Visual Studio Native Tools Command Prompt"*, which includes the neccessary build tools in the `PATH`.
+Make sure to download the header-only asio library (tested with v.1.18.2), the SDL2 framework and update the Makefile variables ```${INCLUDE}```, ```${FRAMEWORKS}``` and ```${LINKER_FLAGS}``` on both the client and server project folders given the installation/include paths.
 
 
 License
 -------
 
-The bundled libraries are each covered by their own licenses:
+The asio bundled library is covered by its own license:
 
-- WebSocket++ - **BSD 3-Clause License** (see `server/external/LICENSE/websocketpp.txt`)
-- Asio - **Boost Software License** (see `server/external/LICENSE/asio.txt`)
-- JsonCpp - **Public Domain / MIT License** (see `server/external/LICENSE/jsoncpp.txt`)
-
-All of the remaining code is licensed under the MIT License. See the file `LICENSE` for details.
+- Asio - **Boost Software License** (see `server/external/LICENSE/asio.txt`)]
