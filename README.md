@@ -16,6 +16,14 @@ Building the server
 
 Make sure to download the header-only asio library (tested with v.1.18.2), the SDL2 framework and update the Makefile variables ```${INCLUDE}```, ```${FRAMEWORKS}``` and ```${LINKER_FLAGS}``` on both the client and server project folders given the installation/include paths.
 
+Also make sure to specify your compiler (tested with g++) by updating the Makefile variable ```${CC}```.
+
+In order to build and run the server/client, go to the respective project's root folder and execute the following commands:
+```bash
+make build
+make run
+```
+
 
 License
 -------
