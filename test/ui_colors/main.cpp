@@ -116,16 +116,16 @@ int main(int arc, char* argv[]) {
 
     // COLOURS ###################################
     // LIGHT THEME
-        // SDL_Colour st_bckgr_clr {255, 255, 204, 255};
-        // SDL_Colour st_mn_clr {179, 224, 255, 50};
-        // SDL_Colour st_mn_btt_clr {0, 122, 204, 255};
-        // SDL_Colour st_mn_ft_clr {230, 255, 230, 255};
+        SDL_Colour st_bckgr_clr {255, 255, 204, 255};
+        SDL_Colour st_mn_clr {179, 224, 255, 50};
+        SDL_Colour st_mn_btt_clr {0, 122, 204, 255};
+        SDL_Colour st_mn_ft_clr {230, 255, 230, 255};
     
     // DARK THEME
-        SDL_Colour st_bckgr_clr {102, 0, 0, 255};
-        SDL_Colour st_mn_clr {26, 26, 26, 50};
-        SDL_Colour st_mn_btt_clr {255, 51, 51, 255};
-        SDL_Colour st_mn_ft_clr {0, 0, 0, 255};
+        // SDL_Colour st_bckgr_clr {102, 0, 0, 255};
+        // SDL_Colour st_mn_clr {26, 26, 26, 50};
+        // SDL_Colour st_mn_btt_clr {255, 51, 51, 255};
+        // SDL_Colour st_mn_ft_clr {0, 0, 0, 255};
     // ###########################################
 
     std::cout << "Test printf 1...\n";

@@ -1,0 +1,5 @@
+.*
+!.gitignore
+Makefile
+*.o
+test/ui_colors/test_ui_colours
