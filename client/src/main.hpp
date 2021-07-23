@@ -1,17 +1,12 @@
-#ifndef MAIN_H
-#define MAIN_H
+#ifndef MAIN_HPP
+#define MAIN_HPP
 
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
-#include "SDL.h"
-
-// #include "../../dependencies/nlohmann/json.hpp"
-#include <curl/curl.h>
-
 
 #include "utilities/timer.hpp"
-
-// using json = nlohmann::json;
+#include "ui/ui.hpp"
+#include "engine/game/pong.hpp"
 
 #endif

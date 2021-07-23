@@ -1,7 +1,9 @@
-#ifndef PONG_H
-#define PONG_H
+#ifndef PONG_HPP
+#define PONG_HPP
 
-#include "../main.hpp"
+#include "services/client.hpp"
+#include "../graphics/graphics_engine.hpp"
+#include "../ui/ui_engine.hpp"
 
 enum DIR {
     UP,

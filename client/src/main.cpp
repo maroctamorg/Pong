@@ -1,34 +1,4 @@
-#include "engine/pong.hpp"
-#include "../dependencies/nlohmann/json.hpp"
-
-using JSON = nlohmann::json;
-
-const int W_W { 800 };
-const int W_H { 500 };
-
-SDL_Window *window { nullptr };
-SDL_Renderer *renderer { nullptr };
-
-bool Init_SDL()
-{
-
-    SDL_Init(SDL_INIT_EVERYTHING);
-    //TTF_Init();
-
-    window = SDL_CreateWindow("TEST", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, W_W, W_H, 0);
-    renderer = SDL_CreateRenderer(window, -1, 0);
-
-    return (window && renderer);
-}
-
-void Quit_SDL()
-{
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
-
-    //TTF_Quit();
-    SDL_Quit();
-}
+#include "main.hpp"
 
 int main() {
 
