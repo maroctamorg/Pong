@@ -142,11 +142,12 @@ bool menu::button_functionality(int id)
 
 void Menu::display(SDL_Renderer *renderer, SDL_Rect *src_rect, SDL_Rect *dest_rect)
 {
+
+    SDL_SetRenderDrawColor(renderer, bckgr_clr.r, bckgr_clr.g, bckgr_clr.b, bckgr_clr.a);
     SDL_RenderClear(renderer);
     // if (bckgr_texture)
     //     SDL_RenderCopy(renderer, bckgr_texture, src_rect, dest_rect);
     // else
-    SDL_SetRenderDrawColor(renderer, bckgr_clr.r, bckgr_clr.g, bckgr_clr.b, bckgr_clr.a);
     
     SDL_SetRenderDrawColor(renderer, mn_clr.r, mn_clr.g, mn_clr.b, mn_clr.a);
     SDL_RenderFillRect(renderer, &menurect);
