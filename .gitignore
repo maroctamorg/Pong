@@ -1,6 +1,16 @@
+# unwanted hidden files
 .*
 !.gitignore
+
+# platform-specific files
 Makefile
+
+# build directories
+client/build/*
+server/build/*
+test/ui_colors/build/*
+
+# escaped build files
 *.o
-test/ui_colors/test_ui_colours
-client/build/pong_client
+test/ui_colors/Makefile
+test/ui_colors/Makefile

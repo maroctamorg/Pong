@@ -23,7 +23,7 @@ void drawBaseRects (SDL_Renderer* renderer, const SDL_Rect& rect, const SDL_Colo
         SDL_RenderDrawLine(renderer, top.x - 1, top.y - 1, top.x + top.w, top.y - 1);
         SDL_RenderDrawLine(renderer, bottom.x - 1, bottom.y + bottom.h, bottom.x + bottom.w, bottom.y + bottom.h);
         // DRAW SHADOW
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 100);
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 200);
         SDL_RenderDrawLine(renderer, left.x - 2, left.y - 2, left.x - 2, left.y + left.h + 1);
         SDL_RenderDrawLine(renderer, right.x + right.w + 1, right.y - 2, right.x + right.w + 1, right.y + right.h + 1);
         SDL_RenderDrawLine(renderer, top.x - 2, top.y - 2, top.x + top.w + 1, top.y - 2);
@@ -34,7 +34,7 @@ void drawBaseRects (SDL_Renderer* renderer, const SDL_Rect& rect, const SDL_Colo
         SDL_RenderDrawLine(renderer, top.x - 3, top.y - 3, top.x + top.w + 2, top.y - 3);
         SDL_RenderDrawLine(renderer, bottom.x - 3, bottom.y + bottom.h + 2, bottom.x + bottom.w + 2, bottom.y + bottom.h + 2);
     } else {
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 100);
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 200);
         SDL_RenderDrawLine(renderer, left.x - 1, left.y - 1, left.x - 1, left.y + left.h);
         SDL_RenderDrawLine(renderer, right.x + right.w, right.y - 1, right.x + right.w, right.y + right.h);
         SDL_RenderDrawLine(renderer, top.x - 1, top.y - 1, top.x + top.w, top.y - 1);
@@ -79,7 +79,7 @@ void drawRoundedRect(SDL_Renderer* renderer, const SDL_Rect& rect, const SDL_Col
             drawPoints(r_x, r_y);
             r_y++;
         }
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 50);
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 200);
         drawPoints(r_x, r_y);
         r_x++;
         drawPoints(r_x, r_y);
