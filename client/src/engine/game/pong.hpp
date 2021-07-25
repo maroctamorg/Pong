@@ -1,7 +1,7 @@
 #ifndef PONG_HPP
 #define PONG_HPP
 
-#include "services/client.hpp"
+#include "../../services/client.hpp"
 #include "../graphics/graphics_engine.hpp"
 #include "../ui/ui_engine.hpp"
 

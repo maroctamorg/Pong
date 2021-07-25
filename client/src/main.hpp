@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
+#include <cmath>
 
 #include "utilities/timer.hpp"
 #include "ui/ui.hpp"

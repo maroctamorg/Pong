@@ -3,6 +3,11 @@
 
 #include "ui_engine.hpp"
 
+typedef struct
+{
+    bool active, pressed;
+} state;
+
 class Button
 {
     public:
