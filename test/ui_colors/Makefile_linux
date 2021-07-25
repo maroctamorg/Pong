@@ -3,6 +3,7 @@ CFLAGS = -std=c++17
 INCLUDE = /usr/include/asio-1.18.2/include `sdl2-config --cflags --libs`
 LINKER_FLAGS = -lSDL2 -lSDL2_mixer -lSDL2_image -lSDL2_ttf
 SOURCES = main.cpp text.cpp button.cpp menu.cpp global.cpp
+SOURCE_OBJECT_FILES = $(shell basename -a ${SOURCES:.cpp=.o})
 TARGET = test_ui_colours
 
 all: build run
@@ -10,14 +11,15 @@ all: build run
 build: compile link
 
 compile:
-	${CC} -c ${SOURCES} ${INCLUDE} ${CFLAGS}
+	${CC} -c $(SOURCES) ${INCLUDE} ${CFLAGS}
+	mv ${SOURCE_OBJECT_FILES} build/
 
 link:
-	${CC} -o ${TARGET} ${SOURCES:.cpp=.o} ${LINKER_FLAGS}
+	${CC} -o ${TARGET} $(patsubst %, build/%, ${SOURCE_OBJECT_FILES}) ${LINKER_FLAGS}
+	mv ${TARGET} build/
 
 run:
-	./${TARGET}
+	build/${TARGET}
 
 cleanup:
-	touch ${SOURCES:.cpp=.o} && rm ${SOURCES:.cpp=.o}
-	touch ${TARGET} && rm ${TARGET}
+	rm $(patsubst %, build/%, ${SOURCE_OBJECT_FILES})

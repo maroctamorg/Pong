@@ -12,5 +12,3 @@ test/ui_colors/build/*
 
 # escaped build files
 *.o
-test/ui_colors/Makefile
-test/ui_colors/Makefile
