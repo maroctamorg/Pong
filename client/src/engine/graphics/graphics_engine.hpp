@@ -120,6 +120,9 @@ public:
     }
 
 public:
+    int getWidth() { return W_W; }
+    int getHeight() { return W_H; }
+
     void display() {
         SDL_RenderPresent(this->renderer);
     }
@@ -128,7 +131,7 @@ public:
         W_W = w;
         W_H = h;
 
-        SDL_SetWindowSize(window, W_W, W_H);
+        // SDL_SetWindowSize(window, W_W, W_H);
     }
 };
 

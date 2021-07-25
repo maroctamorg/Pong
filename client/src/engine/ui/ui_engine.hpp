@@ -16,6 +16,7 @@ protected:
     const GraphicsContext* context { nullptr };
 
     bool hidden { false };
+    bool shadow { true };
     int r { 0 };
     SDL_Rect rect {0, 0, 0, 0};
     SDL_Colour color {0, 0, 0, 0};
@@ -57,7 +58,7 @@ void UI_Element::display(SDL_Renderer* renderer) {
         return;
     }
 
-    drawRoundedRect(renderer, this->rect, this->color, this->border_color, r);
+    drawCutRect(renderer, this->rect, this->color, this->border_color, r, shadow);
 }
 
 #include "text.hpp"
