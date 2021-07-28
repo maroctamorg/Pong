@@ -1,15 +1,16 @@
 #ifndef TEXT_UI_HPP
 #define TEXT_UI_HPP
 
-#include "ui_engine.hpp"
+#include "extern.hpp"
+#include "ui_element.hpp"
 
 class TextBox final : public UI_Element {
 private:
     Text text;
 
 public:
-    void display (SDL_Renderer* renderer) override {
-        text.displayText(renderer);
+    void render() override {
+        text.displayText(context->renderer);
         return;
     }
 };
