@@ -20,7 +20,7 @@ int main() {
                 break;
             }
             case (SDL_WINDOWEVENT): {
-                if(event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED || event.window.event == SDL_WINDOWEVENT_RESIZED) {
+                if(event.window.event == SDL_WINDOWEVENT_RESIZED) {
                     g_context->updateWindowSize(event.window.data1, event.window.data2);
                     test_menu->updateSize();
                     // std::cout << "Resized window:\t" << event.window.data1 << ", " << event.window.data2 << "\t" << g_context.getWidth() << ", " << g_context.getHeight() << "\n";

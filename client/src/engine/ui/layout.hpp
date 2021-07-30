@@ -56,7 +56,7 @@ public:
     Layout(std::shared_ptr<GraphicsContext> context, std::initializer_list<Container> list)
         : UI_Element(context), containers(list), ui_elements(0) {
             if(this->rect.w == 0 || this->rect.h == 0)
-            this->rect = SDL_Rect({0, 0, this->context->getWidth(), this->context->getHeight()});
+                this->rect = SDL_Rect({0, 0, this->context->getWidth(), this->context->getHeight()});
         };
 
     // Move constructor
@@ -112,10 +112,9 @@ public:
 
     void placeUI_Element(UI_Element* a_element, int index);
 
-    void updateSize() override;
-
     void render() override;
-
+    void updateSize() override;
+    void updatePosition(const SDL_Rect& rect) override;
 };
 
 #endif

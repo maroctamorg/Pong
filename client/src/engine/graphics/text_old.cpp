@@ -34,7 +34,7 @@ void Text::assign(const std::string text, const std::string font, int ptsize, co
 
 }
 
-void Text::updateTxt(const std::string text, SDL_Renderer *renderer){
+void Text::assignTxt(const std::string text, SDL_Renderer *renderer){
     this->text = text;
     int control = this->generateTxtTexture(renderer);
     //std::cout << "Returned from generateTxtTexture with flag " << control << '\n';

@@ -32,11 +32,16 @@ public:
     //     : context(graphics_context), rect{x, y, w, h}, color {color.r, color.g, color.b, color.a} {}
     UI_Element(const std::shared_ptr<GraphicsContext> graphics_context, SDL_Rect rect = SDL_Rect({0, 0, 0, 0}), SDL_Colour color = SDL_Colour({0, 0, 0, 0}), SDL_Colour border_color = SDL_Colour({0, 0, 0, 0}), bool hidden = false, int r = 0)
         : context(graphics_context), rect{rect.x, rect.y, rect.w, rect.h}, color {color.r, color.g, color.b, color.a} {}
-    virtual ~UI_Element() = default;
+    virtual ~UI_Element()  {
+        if(texture)
+            SDL_DestroyTexture(texture);
+        texture = nullptr;
+    };
 
 public:
     virtual void render() = 0;
     virtual void updateSize() = 0;
+    virtual void updatePosition(const SDL_Rect& rect);
 
     void setHidden(bool hidden);
     void setCurveRadius(int r);
@@ -45,7 +50,6 @@ public:
     void setColor(const SDL_Colour &color);
     void setBorderColor(const SDL_Colour &color);
     
-    void updatePosition(const SDL_Rect& rect);
     SDL_Rect getPosition();
 };
 
