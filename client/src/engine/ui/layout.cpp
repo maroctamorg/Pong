@@ -1,6 +1,5 @@
 #include "layout.hpp"
 
-
 void Container::place(UI_Element* element, const SDL_Rect& rect) {
     // ui_element = std::move(element);
     SDL_Rect position { static_cast<int>(r_x*rect.w + rect.x), static_cast<int>(r_y*rect.h + rect.y), static_cast<int>(r_w*rect.w), static_cast<int>(r_h*rect.h) };
@@ -42,14 +41,25 @@ void Layout::placeUI_Element(UI_Element* a_element, int index) {
     containers.at(index).place(ui_elements.at(index).get(), this->rect);
 }
 
-void Layout::updateSize() {
-    for (int i = 0; i < containers.size(); i++)
-        containers.at(i).place(ui_elements.at(i).get(), this->rect);
-}
-
 void Layout::render() {
     // std::cout << "##############\tCall to render Layout!\t##############";
     this->UI_Element::render();
     for(int i = 0; i < ui_elements.size(); i++)
         ui_elements.at(i)->render();
+}
+void Layout::update() {
+    for(int i = 0; i < ui_elements.size(); i++)
+        ui_elements.at(i)->update();
+}
+void Layout::updateSize() {
+    if(ui_elements.size() < containers.size()) {
+        std::cout << "Fewer elements than containers in call to Layout::updateSize!\n";
+        return;
+    }
+    for (int i = 0; i < containers.size(); i++)
+        containers.at(i).place(ui_elements.at(i).get(), this->rect);
+}
+void Layout::updatePosition(const SDL_Rect& rect) {
+    this->UI_Element::updatePosition(rect);
+    this->updateSize();
 }

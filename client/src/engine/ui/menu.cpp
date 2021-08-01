@@ -1,8 +1,16 @@
 #include "menu.hpp"
+#include "event.hpp"
 
+// int Menu::update() {
+//     if(layout)
+//         layout->update();
+//     return handler->PollEvent();
+// };
 
 void Menu::updateSize() {
-    layout->updateSize();
+    SDL_Rect w_rect{0, 0, this->context->getWidth(), this->context->getHeight()};
+    layout->updatePosition(w_rect);
+    // layout->updateSize();
 }
 
 // void addUI_Element(UI_Element&& element, int position, X_POS x_pos, Y_POS y_pos) {
@@ -20,8 +28,6 @@ void Menu::render() {
     }
     //initialiser list order determines relative foreground of elements
     if(layout) {
-        SDL_Rect w_rect{0, 0, this->context->getWidth(), this->context->getHeight()};
-        layout->updatePosition(w_rect);
         layout->render();
     }
 };

@@ -12,9 +12,15 @@ private:
 public:
     // Pannel() = default;
     Pannel(std::shared_ptr<GraphicsContext> context, Layout* layout, SDL_Rect rect, SDL_Texture* a_texture = nullptr)
-        :   UI_Element(context, rect, a_texture), layout(layout) {}
+        :   UI_Element(context, rect, a_texture), layout(layout) {
+            if(layout)
+                this->layout->updatePosition(this->rect);
+        }
     Pannel(std::shared_ptr<GraphicsContext> context, Layout* layout, SDL_Color color = SDL_Color({0, 0, 0, 0}), SDL_Rect rect = SDL_Rect({0, 0, 0, 0}))
-        : UI_Element(context, rect, color), layout(layout) {}
+        : UI_Element(context, rect, color), layout(layout) {
+            if(layout)
+                this->layout->updatePosition(this->rect);
+        }
 
     // Implement constructors using l/r-value references and std::unique_ptr as well for user personal preference
 
@@ -27,6 +33,8 @@ public:
 	{
         layout = std::move(pannel.layout);
         pannel.texture = nullptr;
+        if(layout)
+            this->layout->updatePosition(this->rect);
 	}
  
 	// Copy assignment
@@ -45,19 +53,20 @@ public:
 		layout = std::move(pannel.layout); 
         context = pannel.context;
         texture = pannel.texture;
+        
+        if(layout)
+            this->layout->updatePosition(this->rect);
+
 		return *this;
 	}
 
-    ~Pannel() {
-        if(texture)
-            SDL_DestroyTexture(texture);
-        texture = nullptr;
-    }
+    ~Pannel() = default;
 
 public:
-    void updateSize() override;
-
     void render() override;
+    void update() override;
+    void updatePosition(const SDL_Rect& rect) override;
+    void updateSize() override;
 };
 
 #endif

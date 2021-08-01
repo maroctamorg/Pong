@@ -2,55 +2,49 @@
 #define BUTTON_H
 
 #include "extern.hpp"
+#include "layout.hpp"
+
+class EventHandler;
 
 typedef struct
 {
-    bool active, pressed;
+    bool active, select, pressed, selected;
 } state;
 
-class Button
-{
-    public:
+class Button final : public UI_Element {
+private:
+    const unsigned int id;
+    std::unique_ptr<Layout> layout { nullptr };
 
-        Text b_txt {};
-        
-        SDL_Rect b_rect { 200, 200, 200, 200 };
-        
-        SDL_Color b_color { 250, 250, 250, 250 };
+    // must implement animations for button presses to feel real
+    std::function<void(GraphicsContext*, EventHandler*, Button*)> callback;
+    std::shared_ptr<EventHandler> handler;
+    state state { false };
 
-        SDL_Texture *b_texture { nullptr };
+public:
+    Button(std::shared_ptr<GraphicsContext> context, std::shared_ptr<EventHandler> handler, Layout* layout, const unsigned int id, bool active = true, bool select = false, SDL_Color color = SDL_Color({0, 0, 0, 0}), SDL_Rect rect = SDL_Rect({0, 0, 0, 0}));
+    Button(std::shared_ptr<GraphicsContext> context, std::shared_ptr<EventHandler> handler, Layout* layout, const unsigned int id, bool active = true, bool select = false, SDL_Rect rect = SDL_Rect({0, 0, 0, 0}), SDL_Texture* a_texture = nullptr);
+    ~Button();
 
-        state b_state { false };
-        
-        int b_id { -1 };
+public:
+    int getId();
+    void registerCallBack(std::function<void(GraphicsContext*, EventHandler*, Button*)> callback);
 
-        bool initialized {false};
+    void activate();
+    void select();
+    void deactivate();
+    Button* press();
+    void dettachHandler();
 
-        int generateBttTexture(char *imgPath, SDL_Renderer *renderer);
+    bool isSelected();
+    bool isActive();
+    bool isPressed();
+    bool Clicked(const SDL_Point &cursor_pos);
 
-    // public:
-
-
-        Button() = default;
-        Button(char* imgPath, std::string text, std::string font, int ptsize, const SDL_Color *font_color, const SDL_Rect *target_rect, const SDL_Rect *rect, const SDL_Color *color, bool is_active, int id, SDL_Renderer *renderer);
-
-        void assign(char* imgPath, std::string text, std::string font, int ptsize, const SDL_Color *font_color, const SDL_Rect *target_rect, const SDL_Rect *rect, const SDL_Color *color, bool is_active, int id, SDL_Renderer *renderer);
-
-        void activate();
-        Button* press();
-
-        void deactivate();
-
-        bool isActive();
-        bool isPressed();
-
-        bool Clicked(const SDL_Point &cursor_pos);
-
-        void display(SDL_Renderer *renderer);
-
-        void destroyTexture();
-
-        ~Button();
+    virtual void update() override;
+    void updatePosition (const SDL_Rect& rect) override;
+    void updateSize() override;
+    void render() override;
 };
 
 #endif
