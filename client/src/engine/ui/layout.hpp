@@ -113,6 +113,7 @@ public:
     void placeUI_Element(UI_Element* a_element, int index);
 
     void render() override;
+    void update() override;
     void updateSize() override;
     void updatePosition(const SDL_Rect& rect) override;
 };

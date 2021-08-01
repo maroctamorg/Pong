@@ -40,6 +40,7 @@ public:
 
 public:
     virtual void render() = 0;
+    virtual void update() {};
     virtual void updateSize() = 0;
     virtual void updatePosition(const SDL_Rect& rect);
 

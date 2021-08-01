@@ -1,5 +1,11 @@
 #include "menu.hpp"
+#include "event.hpp"
 
+// int Menu::update() {
+//     if(layout)
+//         layout->update();
+//     return handler->PollEvent();
+// };
 
 void Menu::updateSize() {
     SDL_Rect w_rect{0, 0, this->context->getWidth(), this->context->getHeight()};

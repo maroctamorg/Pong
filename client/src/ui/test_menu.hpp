@@ -3,6 +3,6 @@
 
 #include "ui.hpp"
 
-const std::unique_ptr<Menu> Test_Menu(std::shared_ptr<GraphicsContext> context);
+const std::unique_ptr<Menu> Test_Menu(std::shared_ptr<GraphicsContext> context, std::shared_ptr<EventHandler> handler);
 
 #endif

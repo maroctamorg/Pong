@@ -2,41 +2,49 @@
 #define BUTTON_H
 
 #include "extern.hpp"
-#include "text.cpp"
+#include "layout.hpp"
+
+class EventHandler;
 
 typedef struct
 {
-    bool active, pressed;
+    bool active, select, pressed, selected;
 } state;
 
-class Button
-{
+class Button final : public UI_Element {
 private:
-    TextBox b_txt;
-    state b_state { false };
-    int b_id { -1 };
-    bool initialized {false};
+    const unsigned int id;
+    std::unique_ptr<Layout> layout { nullptr };
+
+    // must implement animations for button presses to feel real
+    std::function<void(GraphicsContext*, EventHandler*, Button*)> callback;
+    std::shared_ptr<EventHandler> handler;
+    state state { false };
 
 public:
-    int generateBttTexture(char *imgPath, SDL_Renderer *renderer);
-    void destroyTexture();
-
-public:
-    Button() = default;
-    Button(char* imgPath, std::string text, std::string font, int ptsize, const SDL_Color *font_color, const SDL_Rect *target_rect, const SDL_Rect *rect, const SDL_Color *color, bool is_active, int id, SDL_Renderer *renderer);
+    Button(std::shared_ptr<GraphicsContext> context, std::shared_ptr<EventHandler> handler, Layout* layout, const unsigned int id, bool active = true, bool select = false, SDL_Color color = SDL_Color({0, 0, 0, 0}), SDL_Rect rect = SDL_Rect({0, 0, 0, 0}));
+    Button(std::shared_ptr<GraphicsContext> context, std::shared_ptr<EventHandler> handler, Layout* layout, const unsigned int id, bool active = true, bool select = false, SDL_Rect rect = SDL_Rect({0, 0, 0, 0}), SDL_Texture* a_texture = nullptr);
     ~Button();
 
 public:
-    void assign(char* imgPath, std::string text, std::string font, int ptsize, const SDL_Color *font_color, const SDL_Rect *target_rect, const SDL_Rect *rect, const SDL_Color *color, bool is_active, int id, SDL_Renderer *renderer);
+    int getId();
+    void registerCallBack(std::function<void(GraphicsContext*, EventHandler*, Button*)> callback);
+
     void activate();
-    Button* press();
+    void select();
     void deactivate();
+    Button* press();
+    void dettachHandler();
+
+    bool isSelected();
     bool isActive();
     bool isPressed();
     bool Clicked(const SDL_Point &cursor_pos);
-    void display(SDL_Renderer *renderer);
 
-
+    virtual void update() override;
+    void updatePosition (const SDL_Rect& rect) override;
+    void updateSize() override;
+    void render() override;
 };
 
 #endif

@@ -7,6 +7,11 @@ void Pannel::render () {
         layout->render();
 }
 
+void Pannel::update () {
+    if(layout)
+        layout->update();
+}
+
 void Pannel::updatePosition (const SDL_Rect& rect) {
     this->UI_Element::updatePosition(rect);
     if(layout) {

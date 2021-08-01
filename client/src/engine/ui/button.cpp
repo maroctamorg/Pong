@@ -1,96 +1,79 @@
 #include "button.hpp"
+#include "event.hpp"
 
-//create overloaded version of button constructor and assignor that does not take in a text
-Button::Button(char* imgPath, std::string text, std::string font, int ptsize, const SDL_Color *font_color, const SDL_Rect *target_rect, const SDL_Rect *rect, const SDL_Color *color, bool is_active, int id, SDL_Renderer *renderer)
-    :  b_txt { text, font, ptsize, font_color, target_rect, color, false, renderer }, b_rect { rect->x, rect->y, rect->w, rect->h }, b_color { color->r, color->g, color->b, color->a }, b_state { is_active }, b_id { id }, initialized {true}
-{
-    if (!imgPath)
-    {
-        //std::cout << "Call to generateBttTexture with argument: " << imgPath << '\n'; 
-        int control = generateBttTexture(imgPath, renderer);
-        //std::cout << "Returned from generateBttTexture with flag " << control << '\n';
+Button::Button(std::shared_ptr<GraphicsContext> context, std::shared_ptr<EventHandler> handler, Layout* layout, const unsigned int id, bool active, bool select, SDL_Color color, SDL_Rect rect)
+    :   UI_Element(context, rect, color), handler(handler), layout(layout), id { id }, state { active, select, false, false } {
+        // std::cout << "Button state on initialization:\nactive: " << state.active << "\tselect: " << state.select << '\n';
+        if(this->layout)
+            this->layout->updatePosition(this->rect);
+        if(this->handler)
+            this->handler->registerButtonToHandler(this);
+    }
+Button::Button(std::shared_ptr<GraphicsContext> context, std::shared_ptr<EventHandler> handler, Layout* layout, const unsigned int id, bool active, bool select, SDL_Rect rect, SDL_Texture* a_texture)
+    :   UI_Element(context, rect, a_texture), handler(handler), layout(layout), id { id }, state { active, select, false, false } {
+        if(this->layout)
+            this->layout->updatePosition(this->rect);
+        if(this->handler)
+            this->handler->registerButtonToHandler(this);
+    }
+
+int Button::getId() { return id; }
+void Button::registerCallBack(std::function<void(GraphicsContext*, EventHandler*, Button*)> callback) {
+    this->callback = callback;
+}
+void Button::activate()     {   state.active    =   true;   }
+void Button::select()       {   state.select    =   true;   }
+Button* Button::press() {
+    // std::cout << "Call to button press!\n";
+    if(state.select)
+        state.selected = true; // handler->addButtonToSelected(this);
+    state.pressed = true;
+    // handler->addButtonToPressed(this);
+    callback(context.get(), handler.get(), this);
+    //implement button press animation
+    return this;
+}
+void Button::deactivate()   {   state.active  =   false;  }
+void Button::dettachHandler() {
+    if(this->handler) {
+        this->handler = nullptr;
     }
 }
 
+bool Button::isActive()     {   return state.active;    }
+bool Button::isPressed()    {   return state.pressed;   }
+bool Button::isSelected()   {   return state.selected;  }
 
-void Button::assign(char* imgPath, std::string text, std::string font, int ptsize, const SDL_Color *font_color, const SDL_Rect *target_rect, const SDL_Rect *rect, const SDL_Color *color, bool is_active, int id, SDL_Renderer *renderer)
-{
-    //std::cout << "Call to button.assign().\n";
+bool Button::Clicked(const SDL_Point &cursor_pos) {
+    // std::cout << "Call to clicked:\nrect ->\tx: " << rect.x << "\ty: " << rect.y << "\tw: " << rect.w << "\th: " << rect.h << '\n';
+    return isContained(cursor_pos, this->rect);
+}
 
-    b_txt.assign(text, font, ptsize, font_color, target_rect, color, false, renderer);
-    b_rect = *rect;
-    b_color = *color;
-    b_state = { is_active, false };
-    b_id = id;
-    initialized = true;
+void Button::update() {
+    if(layout)
+        layout->update();
+}
 
-    if (imgPath)
-    {
-        //std::cout << "Call to generateBttTexture with argument: " << imgPath << '\n'; 
-        int control = generateBttTexture(imgPath, renderer);
-        //std::cout << "Returned from generateBttTexture with flag " << control << '\n';
-    } else {
-        //std::cout << "No imgPath provided for button Texture, call to generateBttTexture skipped.\n";
+void Button::updatePosition (const SDL_Rect& rect) {
+    this->UI_Element::updatePosition(rect);
+    if(layout) {
+        layout->updatePosition(rect);
+        // layout->updateSize();
     }
 }
 
-
-void Button::activate()     {   b_state.active  =   true;   }
-Button* Button::press()        {   b_state.pressed =   true; return this;  }
-void Button::deactivate()   {   b_state.active  =   false;  }
-
-
-bool Button::isActive()     {   return b_state.active;  }
-bool Button::isPressed()    {   return b_state.pressed; }
-
-bool Button::Clicked(const SDL_Point &cursor_pos)
-{
-    //std::cout << "Call to Button.Clicked.\n";
-    bool control { false };
-
-    //YET TO BE IMPLEMENTED - ??? isn't it already implemented ?!?
-    if (isContained(cursor_pos, b_rect))
-    {
-        control = true;
-    }
-
-    return control;
+void Button::updateSize () {
+    if(layout)
+        layout->updateSize();
 }
 
-int Button::generateBttTexture(char *imgPath, SDL_Renderer *renderer)
-{
-    if(b_texture)
-    {
-        SDL_DestroyTexture(b_texture);
-        b_texture = NULL;
-    }
-
-    SDL_Surface *surface { SDL_LoadBMP(imgPath) };
-    b_texture = SDL_CreateTextureFromSurface(renderer, surface);
-
-    SDL_FreeSurface(surface);
-
-    if(b_texture) { return 1; }
-    else { return 0; }
+void Button::render() {
+    this->UI_Element::render();
+    if(layout)
+        layout->render();
 }
-
-void Button::display(SDL_Renderer *renderer)
-{   
-    SDL_SetRenderDrawColor(renderer, b_color.r, b_color.g, b_color.b, b_color.a);
-    SDL_RenderFillRect(renderer, &b_rect);
-
-    b_txt.displayText(renderer);
-}
-
-void Button::destroyTexture() {
-    if(b_texture != NULL && b_texture != nullptr)
-    {
-        SDL_DestroyTexture(b_texture);
-        b_texture = NULL;
-    }
-    b_txt.destroyTxtTexture();
-};
 
 Button::~Button() {
-    destroyTexture();
+    if(this->handler)
+        this->handler->removeButtonFromHandler(this->id);
 }

@@ -39,7 +39,7 @@ int TextBox::getContentLengthFromLines(int start_index, int end_index) {
 
 // RECURSIVE-ISH DEFINITION
 bool TextBox::breakContentsToLines(int start_index, int content_pointer) {
-    std::cout << "############\tCall to breakContentsToLines\t############\n";
+    // std::cout << "############\tCall to breakContentsToLines\t############\n";
     if(this->rect.w == 0 || this->rect.h == 0 || start_index > this->lines.size() || (start_index != 0 && start_index == this->lines.size()))
         return false;
     if(content_pointer >= this->contents.length())
@@ -65,7 +65,7 @@ bool TextBox::breakContentsToLines(int start_index, int content_pointer) {
 
     // go through indexes of each line recursively, untill a new-line character is found or overflow occurs
     // in such case break the line
-    std::cout << "###########\tSTARTING RECURSIVE BREAKLINE CHECK\t###########\n";
+    // std::cout << "###########\tSTARTING RECURSIVE BREAKLINE CHECK\t###########\n";
     this->lines.at(start_index)->getCharacterTextureSize(&w, &h);
     std::string lcontent = this->lines.at(start_index)->getString();
     length = lcontent.length();
@@ -229,16 +229,19 @@ void TextBox::render() {
     int w, h;
     for(int i {0}; i < this->lines.size(); i++) {
         if(!this->lines.at(i)->isLoaded()) {
-            // std::cout << "!!!!!\tText texture being rendered is not loaded!\t!!!!!\n";
+            std::cout << "!!!!!\tText texture being rendered is not loaded!\t!!!!!\n";
             return;
         }
         this->lines.at(i)->getCharacterTextureSize(&w, &h);
-        target.y += h + 2;
         // std::cout << "Target Rect: {" << target.x << ", " << target.y << ", " << target.w << ", " << target.h << "}\n";
         this->lines.at(i)->display(context->renderer, target, this->align_x, this->align_y);
+        target.y += 2*h;
     }
     return;
 }
+// void TextBox::update() {
+    
+// }
 void TextBox::updateSize() {
     // std::cout << "Call to TextBox::updateSize()!\n";
     if(this->checkOverflow())

@@ -64,6 +64,7 @@ public:
 
 public:
     void render() override;
+    void update() override;
     void updatePosition(const SDL_Rect& rect) override;
     void updateSize() override;
 };

@@ -1,6 +1,5 @@
 #include "layout.hpp"
 
-
 void Container::place(UI_Element* element, const SDL_Rect& rect) {
     // ui_element = std::move(element);
     SDL_Rect position { static_cast<int>(r_x*rect.w + rect.x), static_cast<int>(r_y*rect.h + rect.y), static_cast<int>(r_w*rect.w), static_cast<int>(r_h*rect.h) };
@@ -47,6 +46,10 @@ void Layout::render() {
     this->UI_Element::render();
     for(int i = 0; i < ui_elements.size(); i++)
         ui_elements.at(i)->render();
+}
+void Layout::update() {
+    for(int i = 0; i < ui_elements.size(); i++)
+        ui_elements.at(i)->update();
 }
 void Layout::updateSize() {
     if(ui_elements.size() < containers.size()) {
