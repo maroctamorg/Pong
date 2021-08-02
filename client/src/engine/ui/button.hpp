@@ -41,7 +41,7 @@ public:
     bool isPressed();
     bool Clicked(const SDL_Point &cursor_pos);
 
-    virtual void update() override;
+    void update() override;
     void updatePosition (const SDL_Rect& rect) override;
     void updateSize() override;
     void render() override;

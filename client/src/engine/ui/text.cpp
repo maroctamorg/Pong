@@ -1,5 +1,24 @@
 #include "text.hpp"
 
+std::string TextBox::getText(){
+    return this->contents;
+}
+
+void TextBox::getCharTextureSize(int* w, int* h){
+    if(this->lines.size() == 0) {
+        *w = 0;
+        *h = 0;
+        return;
+    }
+    this->lines.at(0)->getCharacterTextureSize(w, h);
+    if(*w == 0)
+        *w = 1;
+}
+
+int TextBox::numberOfLines() {
+    return this->lines.size();
+}
+
 void TextBox::updateAlignment(ALIGN_X alignX, ALIGN_Y alignY) {
     this->align_x = alignX;
     this->align_y = alignY;
@@ -221,6 +240,25 @@ void TextBox::adaptContentsToBox() {
     // // std::cout << "############\tLeaving adaptContentsToBox...\t############\n";
     // if(repeat)
     //     this->adaptContentsToBox();
+}
+void TextBox::append(char a) {
+    this->contents.push_back(a);
+    this->breakContentsToLines();
+    // this->breakContentsToLines(this->lines.size() - 1, contents.length() - 1); // IS IT -1 OR JUST .LENGTH()?
+}
+void TextBox::del() {
+    this->contents.pop_back();
+    this->breakContentsToLines();
+    // const int length1 = this->lines.at(this->lines.size() - 2)->getLength();
+    // const int length2 = this->lines.back()->getLength();
+    // if(length2 <= 1)
+    //     this->breakContentsToLines(this->lines.size() - 2, this->contents.size() - 1 - (length1 + length2));
+    // else
+    //     this->breakContentsToLines(this->lines.size() - 1, this->contents.size() - 1 - length2);
+}
+void TextBox::updateText(std::string text) {
+    this->contents = text;
+    this->breakContentsToLines();
 }
 void TextBox::render() {
     // std::cout << "###############\tCall to render text_box!\t###############\n";

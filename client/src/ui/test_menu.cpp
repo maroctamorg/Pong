@@ -19,21 +19,24 @@ const std::unique_ptr<Menu> Test_Menu(std::shared_ptr<GraphicsContext> context, 
     pannel_layout->placeUI_Element(button, 0);
 
     // pannel_layout->placeUI_Element(new TextBox(context, "Short Text", font, 15, font_color, ALIGN_X::CENTER, ALIGN_Y::CENTER), 0);
-    pannel_layout->placeUI_Element(new TextBox(context, medium, font, 15, font_color, ALIGN_X::CENTER, ALIGN_Y::CENTER), 1);
+    // pannel_layout->placeUI_Element(new TextBox(context, medium, font, 15, font_color, ALIGN_X::CENTER, ALIGN_Y::CENTER), 1);
     
-    // // INPUT FORM
-    // Layout* form_layout = new Layout(context, {Container(0.05, 0.05, 0.2, 0.9), Container(0.35, 0.05, 0.6, 0.9)})
-    // std::shared_ptr<Input> input_field { std::make_shared<Input>(context, ...) };
-    // Layout* input_button_layout = new Layout(context, {Container(0.1, 0.05, 0.8, 0.9)});
-    // input_button_layout->placeUI_Element(new TextBox(context, "Submit", font, 15, font_color, ALIGN_X::CENTER, ALIGN_Y::CENTER), 0);
-    // Button* input_button = new Button(context, handler, input_button_layout, 0, true, false, SDL_Color({172, 43, 12, 125}));
-    // input_button->registerCallBack([](GraphicsContext* context, EventHandler* handler, Input* input_field, Button* button) {
-    //     std::cout << "USER INPUT: " << input_field->getInput();
-    //     // input_field = nullptr; // set it to nullptr, so it doesn't get destroyed
-    // });
-    // form_layout->placeUI_Element(input_button, 0);
-    // form_layout->placeUI_Element(input_field, 1);
-    // pannel_layout->placeUI_Element(form_layout, 1);
+    // INPUT FORM
+    Layout* form_layout = new Layout(context, {Container(0.05, 0.05, 0.2, 0.9), Container(0.35, 0.05, 0.6, 0.9)});
+    std::shared_ptr<InputField> input_field { std::make_shared<InputField>(context, handler, 0, font, 15, SDL_Color({0, 0, 0, 255})) };
+    Layout* input_button_layout = new Layout(context, {Container(0.1, 0.05, 0.8, 0.9)});
+    input_button_layout->placeUI_Element(new TextBox(context, "Submit", font, 15, font_color, ALIGN_X::CENTER, ALIGN_Y::CENTER), 0);
+    Button* input_button = new Button(context, handler, input_button_layout, 0, true, false, SDL_Color({172, 43, 12, 125}));
+    std::weak_ptr<InputField> field(input_field);
+    input_button->registerCallBack([field](GraphicsContext* context, EventHandler* handler, Button* button) {
+        if(auto input_field = field.lock())
+            std::cout << "USER INPUT: " << input_field->getText() << '\n';
+        else
+            std::cout << "Weak pointer could not be resolved!\n";
+    });
+    form_layout->placeUI_Element(input_button, 0);
+    form_layout->placeUI_Element(input_field, 1);
+    pannel_layout->placeUI_Element(form_layout, 1);
 
     pannel_layout->placeUI_Element(new TextBox(context, large, font, 15, font_color, ALIGN_X::CENTER, ALIGN_Y::CENTER), 2);
     main_layout->placeUI_Element(new Pannel(context, pannel_layout, SDL_Color({24, 43, 100, 255})), 0);
