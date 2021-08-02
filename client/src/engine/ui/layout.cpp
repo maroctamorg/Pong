@@ -6,38 +6,55 @@ void Container::place(UI_Element* element, const SDL_Rect& rect) {
     element->updatePosition(position);
 }
 
-void Layout::placeUI_Element(std::unique_ptr<UI_Element> element, int index) {
+// void Layout::placeUI_Element(std::unique_ptr<UI_Element> element, int index) {
+//     int length = ui_elements.size();
+//     if(index >= containers.size()) {
+//         std::cout << "!!!!!!!!!\tAttempted to placeUI_Element on a non-existent container!\t!!!!!!!!!\n";
+//         return;
+//     }
+//     else if(index < 0 && length < containers.size()) {
+//         ui_elements.push_back(std::move(element));
+//         containers.at(length).place(ui_elements.at(length).get(), this->rect);
+//         return;
+//     }
+//     else if(index >= length)
+//         ui_elements.resize(index + 1);
+//     ui_elements.at(index) = std::move(element);
+//     containers.at(index).place(ui_elements.at(index).get(), this->rect);
+// }
+
+void Layout::placeUI_Element(std::shared_ptr<UI_Element> element, int index) {
     int length = ui_elements.size();
     if(index >= containers.size()) {
         std::cout << "!!!!!!!!!\tAttempted to placeUI_Element on a non-existent container!\t!!!!!!!!!\n";
         return;
     }
     else if(index < 0 && length < containers.size()) {
-        ui_elements.push_back(std::move(element));
+        ui_elements.push_back(element);
         containers.at(length).place(ui_elements.at(length).get(), this->rect);
         return;
     }
     else if(index >= length)
         ui_elements.resize(index + 1);
-    ui_elements.at(index) = std::move(element);
+    ui_elements.at(index) = element;
     containers.at(index).place(ui_elements.at(index).get(), this->rect);
 }
 
 void Layout::placeUI_Element(UI_Element* a_element, int index) {
-    std::unique_ptr<UI_Element> element{a_element};
+    std::shared_ptr<UI_Element> element{a_element};
     int length = ui_elements.size();
     if(index >= containers.size()) {
         std::cout << "!!!!!!!!!\tAttempted to placeUI_Element on a non-existent container!\t!!!!!!!!!\n";
         return;
     }
     else if(index < 0 && length < containers.size()) {
-        ui_elements.push_back(std::move(element));
+        ui_elements.push_back(element);
         containers.at(length).place(ui_elements.at(length).get(), this->rect);
         return;
     }
     else if(index >= length)
         ui_elements.resize(index + 1);
-    ui_elements.at(index) = std::move(element);
+    ui_elements.at(index) = element;
     containers.at(index).place(ui_elements.at(index).get(), this->rect);
 }
 

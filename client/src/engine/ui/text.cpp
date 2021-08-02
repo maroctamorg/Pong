@@ -19,6 +19,15 @@ int TextBox::numberOfLines() {
     return this->lines.size();
 }
 
+SDL_Point TextBox::getPos(int line, int charPos) {
+    if(line < 0 || line > this->lines.size()) return {-100, -100};
+    int w, h;
+    this->getCharTextureSize(&w, &h);
+    int x = this->rect.x + w*charPos;
+    int y = this->rect.y + 2*h*line;
+    return {x, y};
+}
+
 void TextBox::updateAlignment(ALIGN_X alignX, ALIGN_Y alignY) {
     this->align_x = alignX;
     this->align_y = alignY;
@@ -28,6 +37,14 @@ void TextBox::updateFontSize(int ptsize) {
     this->ptsize = ptsize;
     for(int i {0}; i < this->lines.size(); i++)
         this->lines.at(i)->updateFontSize(this->context->renderer, this->ptsize);
+}
+
+int TextBox::calculateCapacity() {
+    if(this->lines.size() < 1) return 1; // implement a better return value by calculating the size for a dummy text object
+    int w, h;
+    this->getCharTextureSize(&w, &h);
+    return static_cast<int>(this->rect.h/h - 0.5)*static_cast<int>(this->rect.w/w - 0.5);
+
 }
 
 bool TextBox::checkOverflow() {
@@ -247,6 +264,8 @@ void TextBox::append(char a) {
     // this->breakContentsToLines(this->lines.size() - 1, contents.length() - 1); // IS IT -1 OR JUST .LENGTH()?
 }
 void TextBox::del() {
+    if(this->contents.size() < 1)
+        return;
     this->contents.pop_back();
     this->breakContentsToLines();
     // const int length1 = this->lines.at(this->lines.size() - 2)->getLength();

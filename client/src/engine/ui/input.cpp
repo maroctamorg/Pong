@@ -14,7 +14,7 @@ InputField::InputField(std::shared_ptr<GraphicsContext> context, std::shared_ptr
 
 int InputField::getId() { return id; }
 std::string InputField::getText() { return this->textbox.getText(); }
-// void InputField::registerCallBack(std::function<void(GraphicsContext*, EventHandler*, InputField*)> callback) {
+// void InputField::registerCallBack(std::function<void(GraphicsContext*, EventHandler*, std::shared_ptr<InputField>)> callback) {
 //     this->callback = callback;
 // }
 void InputField::activate()     {   state.active    =   true;   }
@@ -35,6 +35,7 @@ InputField* InputField::deSelect() {
     return this;
 }
 void InputField::charIn(char* a) {
+    if(this->textbox.getText().length() >= this->textbox.calculateCapacity()) return;
     this->textbox.append(*a);
     if(*a != '\n')
         this->cursorPos++;
@@ -86,7 +87,8 @@ void InputField::renderCursor() {
     }
     line -= 1;
     counter -= this->textbox.getContentLengthFromLines(index);
-    SDL_Rect cursor { this->rect.x + w*counter, this->rect.y + h*line, static_cast<int>(w/2), h };
+    SDL_Point pos = this->textbox.getPos(line, this->cursorPos - counter);
+    SDL_Rect cursor { pos.x, pos.y, static_cast<int>(w/2), h };
     SDL_SetRenderDrawColor(context->renderer, 0, 0, 0, 100);
     SDL_RenderFillRect(context->renderer, &cursor);
 }

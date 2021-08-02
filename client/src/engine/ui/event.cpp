@@ -16,7 +16,12 @@ Event EventHandler::PollEvent() {
     b_pressed = nullptr;
 
     SDL_Point cursor_pos {-100, -100};
-    SDL_PollEvent(&(event.sdl_event));
+    if(!SDL_PollEvent(&(event.sdl_event))) {
+        event.type = EVENT_TYPES::NO_EVENT;
+        event.button_id = -1;
+        event.char_input = NULL;
+        return this->event;
+    };
     InputField* selected_field = this->getSelectedInputField();
     switch(event.sdl_event.type) {
         case (SDL_MOUSEBUTTONDOWN) :

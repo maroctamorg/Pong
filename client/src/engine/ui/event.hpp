@@ -8,6 +8,7 @@
 // } Callback;
 
 enum class EVENT_TYPES {
+    NO_EVENT = -1,
     UNHANDLED_SDL_EVENT = 0,
     BUTTON_PRESS = 1,
     CHAR_INPUT = 2,

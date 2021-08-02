@@ -6,7 +6,7 @@ int main() {
     std::cout << "Succesfully initialised graphicsContext!\n";
 
     std::shared_ptr<EventHandler> handler { std::make_shared<EventHandler>() };
-    std::unique_ptr<Menu> test_menu = Test_Menu(g_context, handler);
+    std::shared_ptr<Menu> test_menu = Test_Menu::construct(g_context, handler);
 
     bool done {false};
     Event event;

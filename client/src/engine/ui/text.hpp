@@ -30,8 +30,10 @@ public:
     std::string getText();
     void getCharTextureSize(int* w, int* h);
     int numberOfLines();
+    SDL_Point getPos(int line, int charPos);
     void updateAlignment(ALIGN_X alignX, ALIGN_Y alignY);
     void updateFontSize(int ptsize);
+    int calculateCapacity();
     bool checkOverflow();
     int getContentLengthFromLines(int start_index=0, int end_index=-1);
     bool breakContentsToLines(int start_index=0, int content_pointer=0); //recursive

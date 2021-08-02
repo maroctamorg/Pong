@@ -10,7 +10,7 @@ class Menu final {
 private:
     std::shared_ptr<GraphicsContext> context { nullptr };
     std::shared_ptr<EventHandler> handler { nullptr };
-    std::unique_ptr<Layout> layout { nullptr };
+    std::shared_ptr<Layout> layout { nullptr };
 
     SDL_Texture* b_texture { nullptr };
     SDL_Color b_color { 0, 0, 0, 0 };
@@ -22,8 +22,13 @@ public:
     Menu(std::shared_ptr<GraphicsContext> context, std::shared_ptr<EventHandler> handler, std::unique_ptr<Layout> layout, SDL_Color color)
         :   context(context), handler(handler), layout(std::move(layout)), b_color {color} {}
 
-    Menu(std::shared_ptr<GraphicsContext> context, std::shared_ptr<EventHandler> handler, Layout* layout, SDL_Color color)
+    Menu(std::shared_ptr<GraphicsContext> context, std::shared_ptr<EventHandler> handler, std::shared_ptr<Layout> layout, SDL_Texture* texture)
+        :   context(context), handler(handler), layout(layout), b_texture {texture} {}
+    Menu(std::shared_ptr<GraphicsContext> context, std::shared_ptr<EventHandler> handler, std::shared_ptr<Layout> layout, SDL_Color color)
         :   context(context), handler(handler), layout(layout), b_color {color} {}
+
+    Menu(std::shared_ptr<GraphicsContext> context, std::shared_ptr<EventHandler> handler, Layout* layout, SDL_Color color)
+        :   context(context), handler(handler), layout{layout}, b_color {color} {}
 
     ~Menu() {
         if(b_texture) {
