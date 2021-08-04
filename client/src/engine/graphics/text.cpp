@@ -30,6 +30,46 @@ bool Text::loadFont() {
 std::string Text::getString() {
     return this->text;
 }
+
+SDL_Point Text::getPos(SDL_Renderer* renderer, const SDL_Rect& target, ALIGN_X alignX, ALIGN_Y alignY) {
+    if (!txt_texture)
+        return {-100, -100};
+    int texW = 0;
+    int texH = 0;
+    SDL_QueryTexture(txt_texture, NULL, NULL, &texW, &texH);
+
+    SDL_Rect dstrect {0, 0, texW, texH};
+    switch(alignX) {
+        case (ALIGN_X::LEFT): {
+            dstrect.x = target.x;
+            break;
+        }
+        case (ALIGN_X::CENTER): {
+            dstrect.x = target.x + static_cast<int>( (target.w - texW) / 2 - 0.5);
+            break;
+        }
+        case (ALIGN_X::RIGHT): {
+            dstrect.x = target.x + target.w - texW;
+            break;
+        }
+    }
+    switch(alignY) {
+        case (ALIGN_Y::TOP): {
+            dstrect.y = target.y;
+            break;
+        }
+        case (ALIGN_Y::CENTER): {
+            dstrect.y = target.y + static_cast<int>( (target.h - texH) / 2 - 0.5);
+            break;
+        }
+        case (ALIGN_Y::BOTTOM): {
+            dstrect.y = target.y + target.h - texH;
+            break;
+        }
+    }
+    return { dstrect.x, dstrect.y };
+}
+
 int Text::getLength() {
     return this->text.length();
 }
@@ -82,34 +122,9 @@ void Text::display(SDL_Renderer* renderer, const SDL_Rect& target, ALIGN_X align
     SDL_QueryTexture(txt_texture, NULL, NULL, &texW, &texH);
 
     SDL_Rect dstrect {0, 0, texW, texH};
-    switch(alignX) {
-        case (ALIGN_X::LEFT): {
-            dstrect.x = target.x;
-            break;
-        }
-        case (ALIGN_X::CENTER): {
-            dstrect.x = target.x + static_cast<int>( (target.w - texW) / 2 - 0.5);
-            break;
-        }
-        case (ALIGN_X::RIGHT): {
-            dstrect.x = target.x + target.w - texW;
-            break;
-        }
-    }
-    switch(alignY) {
-        case (ALIGN_Y::TOP): {
-            dstrect.y = target.y;
-            break;
-        }
-        case (ALIGN_Y::CENTER): {
-            dstrect.y = target.y + static_cast<int>( (target.h - texH) / 2 - 0.5);
-            break;
-        }
-        case (ALIGN_Y::BOTTOM): {
-            dstrect.y = target.y + target.h - texH;
-            break;
-        }
-    }
+    SDL_Point pos = this->getPos(renderer, target, alignX, alignY);
+    dstrect.x = pos.x;
+    dstrect.y = pos.y;
     // std::cout << "Displaying to target: {" << dstrect.x << ", " << dstrect.y << ", " << dstrect.w << ", " << dstrect.h << "}\n";
     SDL_RenderCopy(renderer, txt_texture, NULL, &dstrect);
 }

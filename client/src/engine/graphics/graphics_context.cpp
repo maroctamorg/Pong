@@ -54,6 +54,10 @@ void GraphicsContext::Init_SDL()
         SDL_RenderClear(this->renderer);
         SDL_RenderPresent(this->renderer);
     }
+
+    //Enable text input
+    SDL_StartTextInput();
+
     //Initialize TTF and MIXER
     TTF_Init();
     Mix_Init(MIX_INIT_MP3 | MIX_INIT_OGG);
@@ -73,6 +77,9 @@ void GraphicsContext::Quit_SDL()
     SDL_DestroyWindow( window );
     window = nullptr;
     renderer = nullptr;
+
+    //Disable text input
+    SDL_StopTextInput();
 
     //Quit SDL subsystems
     Mix_CloseAudio();

@@ -1,5 +1,45 @@
 #include "text.hpp"
 
+std::string TextBox::getText(){
+    return this->contents;
+}
+
+void TextBox::getCharTextureSize(int* w, int* h){
+    if(this->lines.size() == 0) {
+        Text dummyText {context->renderer,"abcdefghijklmnopqrstuvwxyz", font, ptsize, color};
+        dummyText.getCharacterTextureSize(w, h);
+        return;
+    }
+    this->lines.at(0)->getCharacterTextureSize(w, h);
+    // if(*w == 0 || *h == 0) {
+    //     Text dummyText {context->renderer,"abcdefghijklmnopqrstuvwxyz", font, ptsize, color};
+    //     dummyText.getCharacterTextureSize(w, h);
+    //     return;
+    // }
+}
+
+int TextBox::numberOfLines() {
+    return this->lines.size();
+}
+
+SDL_Point TextBox::getPos(int line, int charPos) {
+    SDL_Point initialPos;
+    int x,w,h;
+    if (line == 0 && this->lines.size() == 0) {
+        Text dummyText {context->renderer,"abcdefghijklmnopqrstuvwxyz", font, ptsize, color};
+        initialPos = dummyText.getPos(context->renderer, this->rect, this->align_x, this->align_y);
+        dummyText.getCharacterTextureSize(&w, &h);
+        x = initialPos.x + w*charPos;
+    }
+    else if(line < 0 || line >= this->lines.size()) return {-100, -100};
+    else {
+        initialPos = this->lines.at(line)->getPos(context->renderer, this->rect, this->align_x, this->align_y);
+        this->getCharTextureSize(&w, &h);
+        x = initialPos.x + w*charPos;
+    }
+    return {x, initialPos.y};
+}
+
 void TextBox::updateAlignment(ALIGN_X alignX, ALIGN_Y alignY) {
     this->align_x = alignX;
     this->align_y = alignY;
@@ -9,6 +49,14 @@ void TextBox::updateFontSize(int ptsize) {
     this->ptsize = ptsize;
     for(int i {0}; i < this->lines.size(); i++)
         this->lines.at(i)->updateFontSize(this->context->renderer, this->ptsize);
+}
+
+int TextBox::calculateCapacity() {
+    int w, h;
+    this->getCharTextureSize(&w, &h);
+    int capacity = static_cast<int>(this->rect.h/h - 0.5)*static_cast<int>(this->rect.w/w - 0.5);
+    // std::cout << "Returning from calculateCapacity with w=" << w << "\th=" << h << "\tcapacity: " << capacity << '\n';
+    return capacity;
 }
 
 bool TextBox::checkOverflow() {
@@ -42,6 +90,10 @@ bool TextBox::breakContentsToLines(int start_index, int content_pointer) {
     // std::cout << "############\tCall to breakContentsToLines\t############\n";
     if(this->rect.w == 0 || this->rect.h == 0 || start_index > this->lines.size() || (start_index != 0 && start_index == this->lines.size()))
         return false;
+    if(this->contents.length() < 1) {
+        this->lines.clear();
+        return true;
+    }
     if(content_pointer >= this->contents.length())
         return true;
     int new_content_pointer { content_pointer };
@@ -221,6 +273,32 @@ void TextBox::adaptContentsToBox() {
     // // std::cout << "############\tLeaving adaptContentsToBox...\t############\n";
     // if(repeat)
     //     this->adaptContentsToBox();
+}
+void TextBox::append(char a) {
+    // std::cout << "Call to TextBox::append with char " << a << "!\n";
+    this->contents.push_back(a);
+    this->breakContentsToLines();
+    // this->breakContentsToLines(this->lines.size() - 1, contents.length() - 1); // IS IT -1 OR JUST .LENGTH()?
+}
+bool TextBox::del() {
+    if(this->contents.size() < 1)
+        return false;
+    else if(this->contents.size() == 1)
+        this->contents.clear();
+    else
+        this->contents.pop_back();
+    this->breakContentsToLines();
+    return true;
+    // const int length1 = this->lines.at(this->lines.size() - 2)->getLength();
+    // const int length2 = this->lines.back()->getLength();
+    // if(length2 <= 1)
+    //     this->breakContentsToLines(this->lines.size() - 2, this->contents.size() - 1 - (length1 + length2));
+    // else
+    //     this->breakContentsToLines(this->lines.size() - 1, this->contents.size() - 1 - length2);
+}
+void TextBox::updateText(std::string text) {
+    this->contents = text;
+    this->breakContentsToLines();
 }
 void TextBox::render() {
     // std::cout << "###############\tCall to render text_box!\t###############\n";

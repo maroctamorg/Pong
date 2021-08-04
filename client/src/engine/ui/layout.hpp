@@ -50,11 +50,12 @@ public:
 class Layout final : public UI_Element {
 private:
     std::vector<Container> containers;
-    std::vector<std::unique_ptr<UI_Element>> ui_elements;
+    std::vector<std::shared_ptr<UI_Element>> ui_elements;
+    // std::vector<std::weak_ptr<UI_Element>> ui_elements;
 
 public:
     Layout(std::shared_ptr<GraphicsContext> context, std::initializer_list<Container> list)
-        : UI_Element(context), containers(list), ui_elements(0) {
+        : UI_Element(context), containers(list) {
             if(this->rect.w == 0 || this->rect.h == 0)
                 this->rect = SDL_Rect({0, 0, this->context->getWidth(), this->context->getHeight()});
         };
@@ -67,14 +68,14 @@ public:
             this->rect = SDL_Rect({0, 0, this->context->getWidth(), this->context->getHeight()});
 
         for(int i = 0; i < layout.ui_elements.size(); i++)
-            this->ui_elements.push_back(std::move(layout.ui_elements.at(i)));
+            this->ui_elements.push_back(layout.ui_elements.at(i));
         for(int i = 0; i < layout.containers.size(); i++)
             this->containers.push_back(layout.containers.at(i));
         layout.texture = nullptr;
 	}
  
 	// Copy assignment
-	Layout& operator=(const Layout& layout) = delete;
+	// Layout& operator=(const Layout& layout) = delete;
  
 	// Move assignment
 	Layout& operator=(Layout&& layout) noexcept
@@ -91,11 +92,11 @@ public:
         if(this->rect.w == 0 || this->rect.h == 0)
             this->rect = SDL_Rect({0, 0, this->context->getWidth(), this->context->getHeight()});
 
-        this->ui_elements = std::vector<std::unique_ptr<UI_Element>>(0);
+        this->ui_elements = std::vector<std::shared_ptr<UI_Element>>(layout.ui_elements.size());
         this->containers = std::vector<Container>(0);
 
         for(int i = 0; i < layout.ui_elements.size(); i++)
-            this->ui_elements.push_back(std::move(layout.ui_elements.at(i)));
+            this->ui_elements.push_back(layout.ui_elements.at(i));
         for(int i = 0; i < layout.containers.size(); i++)
             this->containers.push_back(layout.containers.at(i));
 
@@ -108,8 +109,8 @@ public:
     ~Layout() = default;
 
 public:
-    void placeUI_Element(std::unique_ptr<UI_Element> element, int index);
-
+    // void placeUI_Element(std::unique_ptr<UI_Element> element, int index);
+    void placeUI_Element(std::shared_ptr<UI_Element> element, int index);
     void placeUI_Element(UI_Element* a_element, int index);
 
     void render() override;

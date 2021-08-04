@@ -83,6 +83,7 @@ public:
     bool loadFont();
 
     std::string getString();
+    SDL_Point getPos(SDL_Renderer* renderer, const SDL_Rect& target, ALIGN_X alignX, ALIGN_Y alignY);
     int getLength();
     int getPtSize();
     void getCharacterTextureSize(int* w, int* h);
