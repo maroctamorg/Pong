@@ -40,7 +40,7 @@ public:
     // bool breakContentsToLines(); //iterative
     void adaptContentsToBox();
     void append(char a);
-    void del();
+    bool del();
     void updateText(std::string text);
     void render() override;
     void updatePosition (const SDL_Rect& rect) override;

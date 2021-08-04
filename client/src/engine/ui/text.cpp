@@ -6,13 +6,16 @@ std::string TextBox::getText(){
 
 void TextBox::getCharTextureSize(int* w, int* h){
     if(this->lines.size() == 0) {
-        *w = 0;
-        *h = 0;
+        Text dummyText {context->renderer,"abcdefghijklmnopqrstuvwxyz", font, ptsize, color};
+        dummyText.getCharacterTextureSize(w, h);
         return;
     }
     this->lines.at(0)->getCharacterTextureSize(w, h);
-    if(*w == 0)
-        *w = 1;
+    // if(*w == 0 || *h == 0) {
+    //     Text dummyText {context->renderer,"abcdefghijklmnopqrstuvwxyz", font, ptsize, color};
+    //     dummyText.getCharacterTextureSize(w, h);
+    //     return;
+    // }
 }
 
 int TextBox::numberOfLines() {
@@ -20,12 +23,21 @@ int TextBox::numberOfLines() {
 }
 
 SDL_Point TextBox::getPos(int line, int charPos) {
-    if(line < 0 || line > this->lines.size()) return {-100, -100};
-    int w, h;
-    this->getCharTextureSize(&w, &h);
-    int x = this->rect.x + w*charPos;
-    int y = this->rect.y + 2*h*line;
-    return {x, y};
+    SDL_Point initialPos;
+    int x,w,h;
+    if (line == 0 && this->lines.size() == 0) {
+        Text dummyText {context->renderer,"abcdefghijklmnopqrstuvwxyz", font, ptsize, color};
+        initialPos = dummyText.getPos(context->renderer, this->rect, this->align_x, this->align_y);
+        dummyText.getCharacterTextureSize(&w, &h);
+        x = initialPos.x + w*charPos;
+    }
+    else if(line < 0 || line >= this->lines.size()) return {-100, -100};
+    else {
+        initialPos = this->lines.at(line)->getPos(context->renderer, this->rect, this->align_x, this->align_y);
+        this->getCharTextureSize(&w, &h);
+        x = initialPos.x + w*charPos;
+    }
+    return {x, initialPos.y};
 }
 
 void TextBox::updateAlignment(ALIGN_X alignX, ALIGN_Y alignY) {
@@ -40,11 +52,11 @@ void TextBox::updateFontSize(int ptsize) {
 }
 
 int TextBox::calculateCapacity() {
-    if(this->lines.size() < 1) return 1; // implement a better return value by calculating the size for a dummy text object
     int w, h;
     this->getCharTextureSize(&w, &h);
-    return static_cast<int>(this->rect.h/h - 0.5)*static_cast<int>(this->rect.w/w - 0.5);
-
+    int capacity = static_cast<int>(this->rect.h/h - 0.5)*static_cast<int>(this->rect.w/w - 0.5);
+    // std::cout << "Returning from calculateCapacity with w=" << w << "\th=" << h << "\tcapacity: " << capacity << '\n';
+    return capacity;
 }
 
 bool TextBox::checkOverflow() {
@@ -78,6 +90,10 @@ bool TextBox::breakContentsToLines(int start_index, int content_pointer) {
     // std::cout << "############\tCall to breakContentsToLines\t############\n";
     if(this->rect.w == 0 || this->rect.h == 0 || start_index > this->lines.size() || (start_index != 0 && start_index == this->lines.size()))
         return false;
+    if(this->contents.length() < 1) {
+        this->lines.clear();
+        return true;
+    }
     if(content_pointer >= this->contents.length())
         return true;
     int new_content_pointer { content_pointer };
@@ -259,15 +275,20 @@ void TextBox::adaptContentsToBox() {
     //     this->adaptContentsToBox();
 }
 void TextBox::append(char a) {
+    // std::cout << "Call to TextBox::append with char " << a << "!\n";
     this->contents.push_back(a);
     this->breakContentsToLines();
     // this->breakContentsToLines(this->lines.size() - 1, contents.length() - 1); // IS IT -1 OR JUST .LENGTH()?
 }
-void TextBox::del() {
+bool TextBox::del() {
     if(this->contents.size() < 1)
-        return;
-    this->contents.pop_back();
+        return false;
+    else if(this->contents.size() == 1)
+        this->contents.clear();
+    else
+        this->contents.pop_back();
     this->breakContentsToLines();
+    return true;
     // const int length1 = this->lines.at(this->lines.size() - 2)->getLength();
     // const int length2 = this->lines.back()->getLength();
     // if(length2 <= 1)

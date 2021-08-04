@@ -42,12 +42,14 @@ const std::shared_ptr<Menu> Test_Menu::construct(std::shared_ptr<GraphicsContext
     form_layout = std::shared_ptr<Layout>( new Layout(context, {Container(0.05, 0.05, 0.2, 0.9), Container(0.35, 0.05, 0.6, 0.9)}) );
     std::shared_ptr<InputField> input_field { std::make_shared<InputField>(context, handler, 0, font, 15, SDL_Color({0, 0, 0, 255})) };
     input_button_layout = std::shared_ptr<Layout>( new Layout(context, {Container(0.1, 0.05, 0.8, 0.9)}) );
-    input_button_layout->placeUI_Element(std::make_shared<TextBox>(context, "Submit", font, 15, font_color, ALIGN_X::CENTER, ALIGN_Y::CENTER), 0);
+    input_button_layout->placeUI_Element(std::make_shared<TextBox>(context, "Submit", font, 15, font_color), 0);
     input_button = std::make_shared<Button>(context, handler, input_button_layout, 0, true, false, SDL_Color({172, 43, 12, 125}));
     std::weak_ptr<InputField> field(input_field);
     input_button->registerCallBack([field](const GraphicsContext& context, const EventHandler& handler, Button& button) mutable {
-        if(auto input_field = field.lock())
+        if(auto input_field = field.lock()) {
+            button.setColor(SDL_Colour({12, 172, 43, 125}));
             std::cout << "USER INPUT: " << input_field->getText() << '\n';
+        }
         else
             std::cout << "Weak pointer could not be resolved!\n";
     });

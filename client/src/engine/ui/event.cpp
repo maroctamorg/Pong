@@ -28,6 +28,7 @@ Event EventHandler::PollEvent() {
             // std::cout << "SDL_MOUSEBUTTONDOWN event registered.\n";
             SDL_GetMouseState(&(cursor_pos.x), &(cursor_pos.y));
             // std::cout << "Mouse State obtained:\t" << cursor_pos.x << ",\t" << cursor_pos.y << "\n";
+            if(selected_field)  selected_field->deSelect();
             for (int i{0}; i < buttons.size(); i++) {
                 if (buttons.at(i)->isActive() && buttons.at(i)->Clicked(cursor_pos)) {
                     // std::cout << "Pressing button!\n";
@@ -36,10 +37,7 @@ Event EventHandler::PollEvent() {
             }
             for (int i{0}; i < input_fields.size(); i++) {
                 if (input_fields.at(i)->isActive() && input_fields.at(i)->Clicked(cursor_pos)) {
-                    if(input_fields.at(i) != selected_field) {
-                        if(selected_field)  selected_field->deSelect();
-                        this->input_fields.at(i)->select();
-                    }
+                    this->input_fields.at(i)->select();
                     break;
                 }
             }
@@ -121,6 +119,7 @@ InputField* EventHandler::getSelectedInputField() {
 //         ids.push_back(button->id);
 //     return ids;
 // }
+
 std::vector<int> EventHandler::getSelectedButtonIds() {
     std::vector<int> selected;
     for (const auto button : buttons)
@@ -143,14 +142,17 @@ std::vector<int> EventHandler::getSelectedButtonIds() {
 // }
 
 void EventHandler::removeButtonFromHandler(int id) {
-    // std::cout << "Call to removeButtonFromHandler!\n";
+    std::cout << "Call to removeButtonFromHandler!\n";
     int i = this->getButtonIndexById(id);
+    if(i < 0) return;
     buttons.at(i) = nullptr;
     this->dropButton(i);
+    std::cout << "Returned from call to removeButtonFromHandler!\n";
 }
 void EventHandler::removeInputFieldFromHandler(int id) {
-    // std::cout << "Call to removeButtonFromHandler!\n";
+    // std::cout << "Call to removeInputFieldFromHandler!\n";
     int i = this->getInputFieldIndexById(id);
+    if(i < 0) return;
     input_fields.at(i) = nullptr;
     this->dropInputField(i);
 }

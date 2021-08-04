@@ -50,6 +50,8 @@ bool Button::Clicked(const SDL_Point &cursor_pos) {
 }
 
 void Button::update() {
+    if(state.pressed)
+        this->state.pressed = false;
     if(layout)
         layout->update();
 }

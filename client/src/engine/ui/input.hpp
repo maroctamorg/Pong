@@ -21,8 +21,8 @@ private:
     field_state state { true, false };
 
 public:
-    InputField(std::shared_ptr<GraphicsContext> context, std::shared_ptr<EventHandler> handler, const unsigned int id, const std::string font, int ptsize, const SDL_Colour font_color, SDL_Color color = SDL_Color({255, 255, 255, 255}), ALIGN_X alignX = ALIGN_X::CENTER, ALIGN_Y alignY = ALIGN_Y::CENTER, bool active = true, SDL_Rect rect = SDL_Rect({0, 0, 0, 0}));
-    InputField(std::shared_ptr<GraphicsContext> context, std::shared_ptr<EventHandler> handler, const unsigned int id, const std::string font, int ptsize, const SDL_Colour font_color, SDL_Texture* a_texture, ALIGN_X alignX = ALIGN_X::CENTER, ALIGN_Y alignY = ALIGN_Y::CENTER, bool active = true, SDL_Rect rect = SDL_Rect({0, 0, 0, 0}));
+    InputField(std::shared_ptr<GraphicsContext> context, std::shared_ptr<EventHandler> handler, const unsigned int id, const std::string font, int ptsize, const SDL_Colour font_color, SDL_Color color = SDL_Color({255, 255, 255, 255}), ALIGN_X alignX = ALIGN_X::LEFT, ALIGN_Y alignY = ALIGN_Y::CENTER, bool active = true, SDL_Rect rect = SDL_Rect({0, 0, 0, 0}));
+    InputField(std::shared_ptr<GraphicsContext> context, std::shared_ptr<EventHandler> handler, const unsigned int id, const std::string font, int ptsize, const SDL_Colour font_color, SDL_Texture* a_texture, ALIGN_X alignX = ALIGN_X::LEFT, ALIGN_Y alignY = ALIGN_Y::CENTER, bool active = true, SDL_Rect rect = SDL_Rect({0, 0, 0, 0}));
     ~InputField();
 
 public:

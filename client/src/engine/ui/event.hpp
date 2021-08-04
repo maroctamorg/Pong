@@ -36,11 +36,11 @@ public:
 
     ~EventHandler() {
         for (auto& button : buttons) {
-            button->dettachHandler();
+            // button->dettachHandler();
             button = nullptr;
         }
         for (auto& input_field : input_fields) {
-            input_field->dettachHandler();
+            // input_field->dettachHandler();
             input_field = nullptr;
         }
         b_pressed = nullptr;
