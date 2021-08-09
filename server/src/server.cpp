@@ -89,7 +89,7 @@ public:
 
 	int getId() const { return session_id; }
 
-	bool addClientToSession(Player player) {
+	bool addClient(Player player) {
 		if(clients.size() < 2) {
 			clients.insert(std::pair<int, Player>(player.GetID(), player));
 			this->state = STATE::WAITING;
@@ -97,17 +97,24 @@ public:
 				this->state = STATE::START;
 			return true;
 		}
-		// for(int i{0}; i < 2; i++) {
-		// 	if(!clients.at(i).getConnection()) {
-		// 		clients.at(i) = player;
-		// 		if(i == 2) state = STATE::START;
-		// 		return true;
-		// 	}
-		// }
 		return false;
 	}
 
-	Player* getPlayerById(int id) { return &clients.at(id); }
+	void removeClient(int id) {
+		clients.erase(id);
+		if(clients.size() == 1)
+			this->state = STATE::WAITING;
+		else if(clients.size() == 0)
+			this->state = STATE::EMPTY;
+	}
+
+	Player* getPlayerById(int id) { 
+		try {
+			return &clients.at(id);
+		} catch (std::exception e) {
+			return nullptr;
+		}
+	}
 	std::shared_ptr<olc::net::connection<CustomMsgTypes>> getOpponent(int id) {
 		auto iterator = clients.begin();
 		std::shared_ptr<olc::net::connection<CustomMsgTypes>> client;
@@ -136,9 +143,8 @@ public:
 			auto iterator{ sessions.begin() };
 			while( iterator != sessions.end() ) {
 				if(iterator->second.getState() == STATE::WAITING) {
-					if(!iterator->second.addClientToSession(player))
+					if(!this->addClientToSession(player, iterator->second.getId()))
 						return -1;
-					sessions.insert
 					return iterator->first;
 				}
 			}
@@ -147,25 +153,25 @@ public:
 	}
 
 	bool addClientToSession(Player player, int id) {
-		return sessions.at(id).addClientToSession(player);
+		if(!sessions.at(id).addClient(player)) return false;
+		sessions.insert(std::make_pair(player.GetID(), sessions.at(id)));
+		return true;
 	}
 
 	int addClientToNewSession(Player player) {
 		std::cout << "Adding client [ " << player.GetID() << " ] to new session...\n";
 		Session newSession;
-		if(!newSession.addClientToSession(player)) {
-			return -1;
-		}
 		int id = newSession.getId();
 		sessions.insert(std::make_pair(id, newSession));
-		sessions.insert(std::make_pair(player.GetID(), newSession));
+		if(!this->addClientToSession(player, id))
+			return -1;
 		return id;
 	}
 
 	int addNewSession(Player client1, Player client2) {
 		Session newSession;
-		newSession.addClientToSession(client1);
-		newSession.addClientToSession(client2);
+		newSession.addClient(client1);
+		newSession.addClient(client2);
 		int id = newSession.getId();
 		sessions.insert(std::make_pair(id, newSession));
 		sessions.insert(std::make_pair(client1.GetID(), newSession));
@@ -183,17 +189,55 @@ public:
 	// 	// sessions.insert(std::make_pair(newSession.getClientIdByIndex(1), newSession));
 	// }
 
-	bool updateSession(std::shared_ptr<olc::net::connection<CustomMsgTypes>> client, Pos racket, int score) {
+	int getSessionIdByPlayerId(int id) {
 		auto iterator{ sessions.begin() };
 		while( iterator != sessions.end() ) {
-			Player* player = iterator->second.getPlayerById(client->GetID());
+			if(iterator->second.getPlayerById(id)) {
+				return iterator->second.getId();
+			}
+		}
+		return -1;
+	}
+
+	void removeClientFromSession(int id) {
+		try {
+			this->sessions.at(id).removeClient(id);
+			if(this->sessions.at(id).getState() == STATE::EMPTY)
+				this->sessions.erase(id);
+		} catch (std::exception e) {
+			return;
+		}
+		// int session_id = this->getSessionIdByPlayerId(id);
+		// if(session_id < 0)
+		// 	return;
+		// this->sessions.at(session_id).removeClient(id);
+		// if(this->sessions.at(session_id).getState() == STATE::EMPTY)
+		// 	this->sessions.erase(session_id);
+	}
+
+	bool updateSession(std::shared_ptr<olc::net::connection<CustomMsgTypes>> client, Pos racket, int score) {
+		try {
+			Player* player = sessions.at(client->GetID()).getPlayerById(client->GetID());
 			if(player) {
 				player->update(racket, score);
 				player = nullptr;
 				return true;
 			}
+			player = nullptr;
+		} catch (std::exception e) {
+			return false;
 		}
-		return false;
+		// auto iterator{ sessions.begin() };
+		// while( iterator != sessions.end() ) {
+		// 	Player* player = iterator->second.getPlayerById(client->GetID());
+		// 	if(player) {
+		// 		player->update(racket, score);
+		// 		player = nullptr;
+		// 		return true;
+		// 	}
+		// 	player = nullptr;
+		// }
+		// return false;
 	}
 
 	std::shared_ptr<olc::net::connection<CustomMsgTypes>> getOpponent(int id) {
@@ -204,6 +248,15 @@ public:
 			}
 		}
 		return nullptr;
+	}
+
+	bool getSessionState(int client_id, STATE* state) {
+		try {
+			*state = this->sessions.at(client_id).getState();
+			return true;
+		} catch (std::exception e) {
+			return false;
+		}
 	}
 };
 
@@ -275,15 +328,26 @@ protected:
 			msg >> username;
 			std::cout << "[" << client->GetID() << "]: Joining Random Session with username <" << username << ">\n";
 
-			if(session_handler.addClientToRandomSession(Player(client, username)) >= 0) {
+			int session_id = session_handler.addClientToRandomSession(Player(client, username));
+			if(session_id >= 0) {
+				std::cout << "Succesfully added player to session...\n";
 				olc::net::message<CustomMsgTypes> response;
 				response.header.id = CustomMsgTypes::EstablishedSession;
-				std::shared_ptr<olc::net::connection<CustomMsgTypes>> client2 (session_handler.getOpponent(client->GetID()));
-				if(client2.get()) {
-					response << 0;
-					client2->Send(response);
-				} else
-					response << 1;
+				STATE state { STATE::EMPTY };
+				if(session_handler.getSessionState(client->GetID(), &state)) {
+					switch (state) {
+						case STATE::WAITING :
+							response << 1;
+							break;
+						case STATE::START :
+							std::shared_ptr<olc::net::connection<CustomMsgTypes>> client2 (session_handler.getOpponent(client->GetID()));
+							if(client2.get()) {
+								response << 0;
+								client2->Send(response);
+							}
+							break;
+					}
+				}
 				client->Send(response);
 			}
 			else {
@@ -302,11 +366,7 @@ protected:
 			JSON game_info = JSON::parse(game_info_string);
 			Pos racket { game_info["racket"]["x"], game_info["racket"]["y"] };
 			olc::net::message<CustomMsgTypes> response;
-			if(game_info["done"]) {
-				// handle end of match
-				// session_handler.removeSession(client);
-			}
-			else if(session_handler.updateSession(client, racket, game_info["score"])) {
+			if(session_handler.updateSession(client, racket, game_info["score"])) {
 				response.header.id = CustomMsgTypes::GameInfo;
 				std::ostringstream oss;
 				oss <<
@@ -326,6 +386,8 @@ protected:
 				response.header.id = CustomMsgTypes::ErrorMessage;
 				response << 21;
 			}
+			if(game_info["done"])
+				session_handler.removeClientFromSession(client->GetID());
 		}
 		break;
 
