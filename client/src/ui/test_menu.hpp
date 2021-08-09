@@ -2,6 +2,7 @@
 #define TEST_MENU_HPP
 
 #include "ui.hpp"
+#include "../services/client.hpp"
 
 class Test_Menu {
 public:
@@ -21,7 +22,7 @@ public:
     static std::shared_ptr<Menu> menu;
 
 public:
-    static const std::shared_ptr<Menu> construct(std::shared_ptr<GraphicsContext> context, std::shared_ptr<EventHandler> handler);
+    static const std::shared_ptr<Menu> construct(std::shared_ptr<GraphicsContext> context, std::shared_ptr<EventHandler> handler, std::weak_ptr<CustomClient> connection);
 };
 
 #endif

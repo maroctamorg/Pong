@@ -11,5 +11,6 @@
 #include "utilities/timer.hpp"
 #include "ui/ui.hpp"
 #include "engine/game/pong.hpp"
+#include "services/client.hpp"
 
 #endif

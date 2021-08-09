@@ -17,7 +17,7 @@ std::shared_ptr<Button>      Test_Menu::input_button         { nullptr };
 std::shared_ptr<Menu>        Test_Menu::menu                 { nullptr };
 
 
-const std::shared_ptr<Menu> Test_Menu::construct(std::shared_ptr<GraphicsContext> context, std::shared_ptr<EventHandler> handler) {
+const std::shared_ptr<Menu> Test_Menu::construct(std::shared_ptr<GraphicsContext> context, std::shared_ptr<EventHandler> handler, std::weak_ptr<CustomClient> connection) {
     main_layout = std::shared_ptr<Layout>( new Layout(context, {Container(0.1, 0.1, 0.8, 0.8)}) );
     pannel_layout = std::shared_ptr<Layout>( new Layout(context, {Container(0.25, 0.05, 0.5, 0.05), Container(0.25, 0.15, 0.5, 0.10), Container(0.25, 0.30, 0.5, 0.40)}) );
 
@@ -28,10 +28,14 @@ const std::shared_ptr<Menu> Test_Menu::construct(std::shared_ptr<GraphicsContext
     
     // BUTTON
     button_layout = std::shared_ptr<Layout>( new Layout(context, {Container(0.1, 0.05, 0.8, 0.9)}) );
-    button_layout->placeUI_Element(std::make_shared<TextBox>(context, "Button Text", font, 15, font_color, ALIGN_X::CENTER, ALIGN_Y::CENTER), 0);
+    button_layout->placeUI_Element(std::make_shared<TextBox>(context, "Ping Server", font, 15, font_color, ALIGN_X::CENTER, ALIGN_Y::CENTER), 0);
     button = std::make_shared<Button>(context, handler, button_layout, 0, true, false, SDL_Color({172, 43, 12, 125}));
-    button->registerCallBack([](const GraphicsContext& context, const EventHandler& handler, Button& button) {
+    button->registerCallBack([connection](const GraphicsContext& context, const EventHandler& handler, Button& button) {
         button.setColor(SDL_Colour({12, 172, 43, 125}));
+        if(auto c = connection.lock()) {
+                if(c->IsConnected())
+                    c->PingServer();
+            }
     });
     pannel_layout->placeUI_Element(button, 0);
 
@@ -42,13 +46,18 @@ const std::shared_ptr<Menu> Test_Menu::construct(std::shared_ptr<GraphicsContext
     form_layout = std::shared_ptr<Layout>( new Layout(context, {Container(0.05, 0.05, 0.2, 0.9), Container(0.35, 0.05, 0.6, 0.9)}) );
     std::shared_ptr<InputField> input_field { std::make_shared<InputField>(context, handler, 0, font, 15, SDL_Color({0, 0, 0, 255})) };
     input_button_layout = std::shared_ptr<Layout>( new Layout(context, {Container(0.1, 0.05, 0.8, 0.9)}) );
-    input_button_layout->placeUI_Element(std::make_shared<TextBox>(context, "Submit", font, 15, font_color), 0);
+    input_button_layout->placeUI_Element(std::make_shared<TextBox>(context, "Submit username:", font, 15, font_color), 0);
     input_button = std::make_shared<Button>(context, handler, input_button_layout, 0, true, false, SDL_Color({172, 43, 12, 125}));
     std::weak_ptr<InputField> field(input_field);
-    input_button->registerCallBack([field](const GraphicsContext& context, const EventHandler& handler, Button& button) mutable {
+    input_button->registerCallBack([field, connection](const GraphicsContext& context, const EventHandler& handler, Button& button) mutable {
         if(auto input_field = field.lock()) {
             button.setColor(SDL_Colour({12, 172, 43, 125}));
-            std::cout << "USER INPUT: " << input_field->getText() << '\n';
+            std::string input = input_field->getText();
+            std::cout << "USER INPUT: " << input << '\n';
+            if(auto c = connection.lock()) {
+                if(c->IsConnected())
+                    c->JoinRandomSession(input);
+            }
         }
         else
             std::cout << "Weak pointer could not be resolved!\n";
