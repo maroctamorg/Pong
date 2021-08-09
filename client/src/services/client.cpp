@@ -1,6 +1,4 @@
 #include "client.hpp"
-#include "nlohmann/json.hpp"
-using JSON = nlohmann::json;
 
 void CustomClient::PingServer() {
 	olc::net::message<CustomMsgTypes> msg;
@@ -48,7 +46,7 @@ void CustomClient::LeaveSession() {
 	Send(msg);
 }
 
-int CustomClient::handleIncoming(JSON* server_data) {
+STATE CustomClient::handleIncoming(JSON* server_data) {
 	if (this->olc::net::client_interface<CustomMsgTypes>::IsConnected()) {
 		if (!this->olc::net::client_interface<CustomMsgTypes>::Incoming().empty()) {
 			auto msg = this->olc::net::client_interface<CustomMsgTypes>::Incoming().pop_front().msg;
@@ -70,42 +68,61 @@ int CustomClient::handleIncoming(JSON* server_data) {
 			}
 			break;
 
-			case CustomMsgTypes::JoinRandomSession: {
-				// HANDLE RANDOM SESSION
-				return 1;
-			}
-			break;
+			// case CustomMsgTypes::JoinRandomSession: {
+			// 	// HANDLE RANDOM SESSION
+			// }
+			// break;
 
-			case CustomMsgTypes::CreateCustomSession: {
-				// HANDLE CREATE CUSTOM SESSION
-			}
-			break;
+			// case CustomMsgTypes::CreateCustomSession: {
+			// 	// HANDLE CREATE CUSTOM SESSION
+			// }
+			// break;
 			
-			case CustomMsgTypes::JoinCustomSession: {
-				// HANDLE JOIN CUSTOM SESSION
+			// case CustomMsgTypes::JoinCustomSession: {
+			// 	// HANDLE JOIN CUSTOM SESSION
+			// }
+			// break;
+
+			case CustomMsgTypes::EstablishedSession: {
+				int flag { -1 };
+				msg >> flag;
+				if(flag == 0)
+					return STATE::START;
+				else if (flag == 1)
+					return STATE::WAITING;
+				else {
+					return STATE::END;
+					std::cout << "Unexpected return type!\n";
+				}
 			}
 			break;
 			
 			case CustomMsgTypes::GameInfo: {
 				// HANDLE GAME INFO
-				if(!server_data) return;
+				if(!server_data) return STATE::END;
 				std::string jsonData;
 				msg >> jsonData >> server_data;
-				return 2;
+				return STATE::GAME_INFO;
 			}
 			break;
 			
+			case CustomMsgTypes::ErrorMessage: {
+				std::cout << "Received error message from server! Disconnecting...\n";
+				return STATE::END;
+			}
+			break;
+
 			case CustomMsgTypes::LeaveSession: {
 				// HANDLE LEAVE SESSION
 			}
 			break;
 			}
-		return 0;
 		}
+		return STATE::QUIET;
 	}
 	else {
 		std::cout << "The connection to the server was closed!\n";
-		return -1;
+		return STATE::END;
 	}
 }
 

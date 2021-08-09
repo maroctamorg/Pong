@@ -4,6 +4,18 @@
 #include <chrono>
 // #include <SDL2/SDL.h>
 #include "../../dependencies/net_framework/olc_net.h"
+#include "../../dependencies/nlohmann/json.hpp"
+
+using JSON = nlohmann::json;
+
+enum class STATE {
+    END = -1,
+    ESTABLISHING = 0,
+	WAITING = 1,
+    START = 2,
+    GAME_INFO = 3,
+    QUIET = 4,
+};
 
 enum class CustomMsgTypes : uint32_t
 {
@@ -12,6 +24,7 @@ enum class CustomMsgTypes : uint32_t
 	JoinRandomSession,
 	CreateCustomSession,
 	JoinCustomSession,
+	EstablishedSession,
 	GameInfo,
 	LeaveSession,
 	ErrorMessage,
@@ -33,5 +46,5 @@ public:
 	
 	void LeaveSession();
 
-	int handleIncoming(JSON* serverData);
+	STATE handleIncoming(JSON* serverData);
 };
