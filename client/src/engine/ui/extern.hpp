@@ -6,6 +6,7 @@
 #include <memory>
 #include <vector>
 #include <initializer_list>
+#include <functional>
 
 #include "../graphics/graphics_engine.hpp"
 
