@@ -361,35 +361,70 @@ protected:
 
 		case CustomMsgTypes::GameInfo:
 		{
-			std::string game_info_string;
-			msg >> game_info_string;
-			JSON game_info = JSON::parse(game_info_string);
-			Pos racket { game_info["racket"]["x"], game_info["racket"]["y"] };
+			bool done;
+			Pos racket;
+			int score;
+			std::cout << "Received game_info from [" << client->GetID() << "]\n";
+			msg >> done >> racket.x >> racket.y >> score;
 			olc::net::message<CustomMsgTypes> response;
-			if(session_handler.updateSession(client, racket, game_info["score"])) {
+			if(session_handler.updateSession(client, racket, score)) {
 				response.header.id = CustomMsgTypes::GameInfo;
 				std::ostringstream oss;
 				oss <<
 				"{"
-					"'done': false,"
-					"'racket': {"
-					"'x': " << 1 - racket.x << ","
-					"'y': " << racket.y <<
+					"\"done\": " << done << ","
+					"\"racket\": {"
+					"\"x\": " << 1 - racket.x << ","
+					"\"y\": " << racket.y <<
 					"},"
-					"'score': " << game_info["score"] <<
+					"\"score\": " << score <<
 				"{";
 				std::string data = oss.str();
 				response << data;
+				std::cout << "Sending game_info to opponent\n";
 				session_handler.getOpponent(client->GetID())->Send(response);
 			}
 			else {
 				response.header.id = CustomMsgTypes::ErrorMessage;
 				response << 21;
 			}
-			if(game_info["done"])
+			if(done)
 				session_handler.removeClientFromSession(client->GetID());
 		}
 		break;
+		// case CustomMsgTypes::GameInfo:
+		// {
+		// 	char* game_info_string;
+		// 	msg >> game_info_string;
+		// 	std::cout << "Received game_info from [" << client->GetID() << "]:\n" << game_info_string << '\n';
+		// 	JSON game_info = JSON::parse(game_info_string);
+		// 	Pos racket { game_info["racket"]["x"], game_info["racket"]["y"] };
+		// 	olc::net::message<CustomMsgTypes> response;
+		// 	if(session_handler.updateSession(client, racket, game_info["score"])) {
+		// 		response.header.id = CustomMsgTypes::GameInfo;
+		// 		std::ostringstream oss;
+		// 		oss <<
+		// 		"{"
+		// 			"\"done\": false,"
+		// 			"\"racket\": {"
+		// 			"\"x\": " << 1 - racket.x << ","
+		// 			"\"y\": " << racket.y <<
+		// 			"},"
+		// 			"\"score\": " << game_info["score"] <<
+		// 		"{";
+		// 		std::string data = oss.str();
+		// 		response << data;
+		// 		std::cout << "Sending game_info to opponent:\n" << response << '\n';
+		// 		session_handler.getOpponent(client->GetID())->Send(response);
+		// 	}
+		// 	else {
+		// 		response.header.id = CustomMsgTypes::ErrorMessage;
+		// 		response << 21;
+		// 	}
+		// 	if(game_info["done"])
+		// 		session_handler.removeClientFromSession(client->GetID());
+		// }
+		// break;
 
 		// case CustomMsgTypes::MessageAll:
 		// {

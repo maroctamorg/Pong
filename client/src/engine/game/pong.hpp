@@ -45,24 +45,26 @@ public:
 };
 
 class Ball {
-    private:
-        Point bPos { 0.5, 0.5 };  // !!!!!!!!!!
-        Point bVel { 0.05, 0 };  // !!!!!!!!!!
-        Rect bRect { 0.475, 0.475, 0.025, 0.025 };  // !!!!!!!!!!
+public:
+    static const Rect b_inRect;
+    static const Point b_inVel;
+
+private:
+    Point bVel { 0.0001, 0 };
+    Rect bRect { 0.4875, 0.4875, 0.025, 0.025 };
     
-    public:
-        Ball() = default;
-        // Ball(int v);
-        
-        Point& getPos();
-        Rect& getRect();
-        Point& getVel();
+public:
+    Ball() = default;
+    // Ball(int v);
+    
+    Rect& getRect();
+    Point& getVel();
 
-        void setPos(double x, double y);
-        void setVel(double x, double y);
+    // void setPos(double x, double y);
+    // void setVel(double x, double y);
 
-        void move();
-        void display(SDL_Renderer *renderer, const SDL_Rect &window_rect);
+    void move();
+    void display(SDL_Renderer *renderer, const SDL_Rect &window_rect);
 };
 
 class Paddle {
@@ -99,7 +101,7 @@ private:
     Paddle lcl_paddle;
     Paddle rmt_paddle;
     Rect lcl_goal { 0, 0.2, 0.01, 0.6 };  // !!!!!!!!!!
-    Rect rmt_goal { 1, 0.2, 0.01, 0.5 };  // !!!!!!!!!!
+    Rect rmt_goal { 0.99, 0.2, 0.01, 0.5 };  // !!!!!!!!!!
 
 public:
     Game(std::shared_ptr<GraphicsContext> context, std::shared_ptr<CustomClient> connection)

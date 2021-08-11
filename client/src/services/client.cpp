@@ -32,11 +32,13 @@ void CustomClient::JoinCustomSession(std::string session_id) {
 }
 
 void CustomClient::SendGameInfo(JSON* local_data) {
-	if(!local_data) return;
+	if(!local_data || local_data->size() < 1) return;
 	olc::net::message<CustomMsgTypes> msg;
 	msg.header.id = CustomMsgTypes::GameInfo;
-	std::string jsonData;
-	msg << jsonData << *local_data;
+	// std::string json_data = local_data->dump();
+	// msg << json_data;
+	msg << (*local_data)["done"] << (*local_data)["racket"]["x"] << (*local_data)["racket"]["y"] << (*local_data)["score"];
+	std::cout << "Sending game_info data:\n";
 	Send(msg);
 }
 
@@ -100,8 +102,7 @@ STATE CustomClient::handleIncoming(JSON* server_data) {
 			case CustomMsgTypes::GameInfo: {
 				// HANDLE GAME INFO
 				if(!server_data) return STATE::END;
-				std::string jsonData;
-				msg >> jsonData >> server_data;
+				msg << (*server_data)["done"] << (*server_data)["racket"]["x"] << (*server_data)["racket"]["y"] << (*server_data)["score"];
 				return STATE::GAME_INFO;
 			}
 			break;
