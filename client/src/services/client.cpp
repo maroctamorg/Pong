@@ -1,5 +1,11 @@
 #include "client.hpp"
 
+std::string custom_struct_utils::toString(Game_Info info) {
+	std::ostringstream oss;
+	oss << "\ndone: " << (info.done ? "true" : "false") << ",\tscore: " << info.score << "\nracket:\tx: " << info.x << ", y: " << info.y << '\n';
+	return oss.str();
+}
+
 void CustomClient::PingServer() {
 	olc::net::message<CustomMsgTypes> msg;
 	msg.header.id = CustomMsgTypes::ServerPing;
@@ -14,7 +20,7 @@ void CustomClient::PingServer() {
 void CustomClient::JoinRandomSession(std::string username) {
 	olc::net::message<CustomMsgTypes> msg;
 	msg.header.id = CustomMsgTypes::JoinRandomSession;
-	msg << username;
+	msg.write(username);
 	Send(msg);
 }
 
@@ -27,18 +33,16 @@ void CustomClient::CreateCustomSession() {
 void CustomClient::JoinCustomSession(std::string session_id) {
 	olc::net::message<CustomMsgTypes> msg;
 	msg.header.id = CustomMsgTypes::JoinCustomSession;
-	msg << session_id;
+	msg.write(session_id);
 	Send(msg);
 }
 
-void CustomClient::SendGameInfo(JSON* local_data) {
-	if(!local_data || local_data->size() < 1) return;
+void CustomClient::SendGameInfo(Game_Info* game_info) {
+	if(!game_info) return;
 	olc::net::message<CustomMsgTypes> msg;
 	msg.header.id = CustomMsgTypes::GameInfo;
-	// std::string json_data = local_data->dump();
-	// msg << json_data;
-	msg << (*local_data)["done"] << (*local_data)["racket"]["x"] << (*local_data)["racket"]["y"] << (*local_data)["score"];
-	std::cout << "Sending game_info data:\n";
+	msg << *game_info;
+	// std::cout << "Sending game_info data:" << custom_struct_utils::toString(*game_info);
 	Send(msg);
 }
 
@@ -48,7 +52,7 @@ void CustomClient::LeaveSession() {
 	Send(msg);
 }
 
-STATE CustomClient::handleIncoming(JSON* server_data) {
+STATE CustomClient::handleIncoming(Game_Info* game_info) {
 	if (this->olc::net::client_interface<CustomMsgTypes>::IsConnected()) {
 		if (!this->olc::net::client_interface<CustomMsgTypes>::Incoming().empty()) {
 			auto msg = this->olc::net::client_interface<CustomMsgTypes>::Incoming().pop_front().msg;
@@ -101,8 +105,8 @@ STATE CustomClient::handleIncoming(JSON* server_data) {
 			
 			case CustomMsgTypes::GameInfo: {
 				// HANDLE GAME INFO
-				if(!server_data) return STATE::END;
-				msg << (*server_data)["done"] << (*server_data)["racket"]["x"] << (*server_data)["racket"]["y"] << (*server_data)["score"];
+				if(!game_info) return STATE::END;
+				msg >> *game_info;
 				return STATE::GAME_INFO;
 			}
 			break;

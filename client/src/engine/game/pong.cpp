@@ -77,9 +77,9 @@ Rect& Paddle::getRect() {
 
 void Paddle::move(const Point &cursorPos, bool remote) {
     
-    if (cursorPos.x < 0.5 && !remote) {
+    if (cursorPos.x <= 0.5 && !remote) {
         padRct.x = cursorPos.x;
-    } else if (cursorPos.x > 0.5 && remote) {
+    } else if (cursorPos.x >= 0.5 && remote) {
         padRct.x = cursorPos.x;
     }
 
@@ -136,65 +136,34 @@ void Game::checkCollision() {
     }
 
     Rect& lcl_pad_pos = this->lcl_paddle.getRect();
-    Rect& rmt_pad_pos = this->lcl_paddle.getRect();
-    // CHECK FOR HITS WITH LOCAL PADDLE
-    // bool lhitX { bRect.x <= lcl_pad_pos.x + lcl_pad_pos.w && bRect.x >= lcl_pad_pos.x };
-    // bool lhitY { bRect.y <= lcl_pad_pos.y + lcl_pad_pos.h && bRect.y >= lcl_pad_pos.y };
-    // // CHECK FOR HITS WITH REMOTE PADDLE
-    // bool rhitX = bRect.x <= rmt_pad_pos.x + rmt_pad_pos.w && bRect.x >= rmt_pad_pos.x;
-    // bool rhitY = bRect.y <= rmt_pad_pos.y + rmt_pad_pos.h && bRect.y >= rmt_pad_pos.y;
+    Rect& rmt_pad_pos = this->rmt_paddle.getRect();
 
-    // bool hit = (lhitX && lhitY) || (rhitX && rhitY);
-    // bool hit = checkRelCollision(this->context.get(), bRect, lcl_pad_pos) || checkRelCollision(this->context.get(), bRect, rmt_pad_pos);
-
-    // auto handlePaddleCollision {
-    //     [bRect, bVel](const Rect& paddle_pos) mutable {
-    //         if(bRect.x < paddle_pos.x + static_cast<int>(paddle_pos.w/2)) {
-    //             bRect.x = paddle_pos.x;
-    //             bVel.x = bVel.x > 0 ? -bVel.x : bVel.x;
-    //         } else {
-    //             bRect.x = paddle_pos.x + paddle_pos.w;
-    //             bVel.x = bVel.x > 0 ? bVel.x : -bVel.x;
-    //         }
-    //         if (paddle_pos.y <= 0.5) {
-    //             bVel.y = bVel.y > 0 ? bVel.y : -bVel.y;
-    //         } else if (paddle_pos.y > 0.5) {
-    //             bVel.y = bVel.y > 0 ? -bVel.y : bVel.y;
-    //         }
-    //     }
-    // };
-
-    // if (checkRelCollision(this->context.get(), bRect, lcl_pad_pos))
-    //     handlePaddleCollision(lcl_pad_pos);
-    // else if (checkRelCollision(this->context.get(), bRect, rmt_pad_pos)) {
-    //     handlePaddleCollision(rmt_pad_pos);
-    // }
-
+    // CHECK FOR LOCAL AND REMOTE PADDLE COLLISIONS
     if (checkRelCollision(this->context.get(), bRect, lcl_pad_pos)) {
         if(bRect.x < lcl_pad_pos.x + static_cast<int>(lcl_pad_pos.w/2)) {
             bRect.x = lcl_pad_pos.x;
-            bVel.x = bVel.x > 0 ? -bVel.x : bVel.x;
+            bVel.x = bVel.x >= 0 ? -bVel.x : bVel.x;
         } else {
             bRect.x = lcl_pad_pos.x + lcl_pad_pos.w;
-            bVel.x = bVel.x > 0 ? bVel.x : -bVel.x;
+            bVel.x = bVel.x >= 0 ? bVel.x : -bVel.x;
         }
         if (lcl_pad_pos.y <= 0.5) {
-            bVel.y = bVel.y > 0 ? bVel.y : -bVel.y;
+            bVel.y = bVel.y >= 0 ? (bVel.y == 0 ? this->ball.b_inVel.x : bVel.y) : -bVel.y;
         } else if (lcl_pad_pos.y > 0.5) {
-            bVel.y = bVel.y > 0 ? -bVel.y : bVel.y;
+            bVel.y = bVel.y >= 0 ? (bVel.y == 0 ? -this->ball.b_inVel.x : -bVel.y) : bVel.y;
         }
     } else if (checkRelCollision(this->context.get(), bRect, rmt_pad_pos)) {
         if(bRect.x < rmt_pad_pos.x + static_cast<int>(rmt_pad_pos.w/2)) {
             bRect.x = rmt_pad_pos.x;
-            bVel.x = bVel.x > 0 ? -bVel.x : bVel.x;
+            bVel.x = bVel.x >= 0 ? -bVel.x : bVel.x;
         } else {
             bRect.x = rmt_pad_pos.x + rmt_pad_pos.w;
-            bVel.x = bVel.x > 0 ? bVel.x : -bVel.x;
+            bVel.x = bVel.x >= 0 ? bVel.x : -bVel.x;
         }
         if (rmt_pad_pos.y <= 0.5) {
-            bVel.y = bVel.y > 0 ? bVel.y : -bVel.y;
+            bVel.y = bVel.y >= 0 ? (bVel.y == 0 ? this->ball.b_inVel.x : bVel.y) : -bVel.y;
         } else if (rmt_pad_pos.y > 0.5) {
-            bVel.y = bVel.y > 0 ? -bVel.y : bVel.y;
+            bVel.y = bVel.y >= 0 ? (bVel.y == 0 ? -this->ball.b_inVel.x : -bVel.y) : bVel.y;
         }
     }
 }
@@ -219,10 +188,10 @@ void Game::display() {
 
     SDL_SetRenderDrawColor(this->context->renderer, 50, 150, 250, 250);
     SDL_Rect l_goal = lcl_goal*window_rect;
-    SDL_RenderFillRect(this->context->renderer, &l_goal); // !!!!!!!!!!
+    SDL_RenderFillRect(this->context->renderer, &l_goal);
     SDL_SetRenderDrawColor(this->context->renderer, 250, 150, 50, 250);
     SDL_Rect r_goal = rmt_goal*window_rect;
-    SDL_RenderFillRect(this->context->renderer, &r_goal); // !!!!!!!!!!
+    SDL_RenderFillRect(this->context->renderer, &r_goal);
     
     ball.display(this->context->renderer, window_rect);
     lcl_paddle.display(this->context->renderer, window_rect, false);
@@ -232,24 +201,49 @@ void Game::display() {
 }
 
 bool Game::start() {
-    int counter {-1};
     SDL_Event event;
     Point lcl_cursor_pos { 0.5, 0.5 };
     Point rmt_cursor_pos { 0.5, 0.5 };
-    JSON sData;
-    JSON lData;
+    Game_Info lData;
+    bool update;
     STATE state { STATE::START };
     Timer gLoop;
     bool done {false};
 
+    std::thread server_update_thr = std::thread([&state, &done, &rmt_cursor_pos, &lData, &update, connection { this->connection }]() {
+        Game_Info sData;
+        int counter {-1};
+        while(!done) {
+            counter++;
+            state = connection->handleIncoming(&sData);
+            switch(state) {
+            case (STATE::QUIET) :
+                if(false && counter > 10000) {
+                    std::cout << "Communication with the server has failed, leaving match...\n";
+                    done = true;
+                    return false;
+                }
+                break;
+            case (STATE::END) :
+                done = true;
+                break;
+            case (STATE::GAME_INFO) :
+                std::cout << "Received game info from server: " << custom_struct_utils::toString(sData) << '\n';
+                rmt_cursor_pos = { sData.x, sData.y };
+                counter = -1;
+                break;
+            default :
+                std::cout << "Unhandled server response!\n";
+                counter = -1;
+            }
+        }
+    });
+
     while(!done) {
-        gLoop.reset();
-        counter++;
         if(SDL_PollEvent(&event)) {
             switch(event.type) {
                 case (SDL_QUIT): {
                         done = true;
-                        return true;
                         break;
                     }
                 case (SDL_WINDOWEVENT): {
@@ -266,47 +260,30 @@ bool Game::start() {
         lcl_cursor_pos.x = (1.0*x) / this->context->getWidth();
         lcl_cursor_pos.y = (1.0*y) / this->context->getHeight();
         // std::cout << "Mouse State obtained: (" << cursorPos.x << ", "<< cursorPos.y << ")\n";
-        state = this->connection->handleIncoming(&sData);
-        switch(state) {
-            case (STATE::QUIET) :
-                if(false && counter > 10000) {
-                    std::cout << "Communication with the server has failed, leaving match...\n";
-                    done = true;
-                    return false;
-                }
-                break;
-            case (STATE::END) :
-                done = true;
-                return false;
-                break;
-            case (STATE::GAME_INFO) :
-                std::cout << "Received game info from server: " << sData << '\n';
-                rmt_cursor_pos = { sData["racket"]["x"], sData["racket"]["y"] };
-                counter = 0;
-                break;
-            default :
-                std::cout << "Unhandled server response!\n";
-                counter = 0;
-        }
+        // state = this->connection->handleIncoming(&sData);
+
+        // POST LOCAL DATA TO SERVER
+        lData.done = done;
+        lData.x = lcl_cursor_pos.x;
+        lData.y = lcl_cursor_pos.y;
+        this->connection->SendGameInfo(&lData);
 
         // UPDATE
         this->update(lcl_cursor_pos, rmt_cursor_pos);
-        
-        // POST LOCAL DATA TO SERVER
-        lData["done"] = done;
-        // lData["racket"]= this->lcl_paddle.getPos();
-        lData["racket"]["x"] = this->lcl_paddle.getPos().x;
-        lData["racket"]["y"] = this->lcl_paddle.getPos().y;
-        // this->connection->SendGameInfo(&lData);
-
-        // DISPLAY
-        this->display();
 
         // STABLE FRAMES
         // double elapsed = gLoop.elapsed();
         // std::cout << "Game Loop Length:\t" << elapsed << '\n';
         // wait appropriate time - 60FPS
         sleep(1000*static_cast<int>(1/60 - gLoop.elapsed() > 0 ? 1/60 - gLoop.elapsed() : 0));
+        
+        // DISPLAY
+        this->display();
+
+        gLoop.reset();
     }
+
+    if (server_update_thr.joinable()) server_update_thr.join();
+
     return true;
 }

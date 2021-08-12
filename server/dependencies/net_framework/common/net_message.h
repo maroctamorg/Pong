@@ -50,7 +50,7 @@
 
 	Author
 	~~~~~~
-	David Barr, aka javidx9, ©OneLoneCoder 2019, 2020
+	David Barr, aka javidx9, ï¿½OneLoneCoder 2019, 2020
 
 */
 
@@ -124,7 +124,7 @@ namespace olc
 				return msg;
 			}
 
-			// Pulls any POD-like data form the message buffer
+			// Pulls any POD-like data from the message buffer
 			template<typename DataType>
 			friend message<T>& operator >> (message<T>& msg, DataType& data)
 			{
@@ -145,7 +145,67 @@ namespace olc
 
 				// Return the target message so it can be "chained"
 				return msg;
-			}			
+			}
+
+			// Writes inverted c-style string into the message buffer
+			void write(const std::string& string)
+			{
+				const char* data { string.c_str() };
+				// Cache current size of vector, as this will be the point we insert the data
+				size_t i = this->body.size();
+
+				// compute size of data
+				int a {0};
+				while(*(data + a) != '\0')
+					a++;
+				if(a == 0)
+					return;
+				a++; // position of null character
+
+				// Resize the vector by the size of the data being pushed
+				this->body.resize(this->body.size() + (a + 1));
+
+				// Physically copy the data char by char in inverted order into the newly allocated vector space
+				size_t j{i};
+				int k{a};
+				while(k >= 0) {
+					std::memcpy(this->body.data() + j, data + k, 1);
+					j++;
+					k--;
+				}
+
+				// Recalculate the message size
+				this->header.size = this->size();
+			}
+
+			// Reads string from message
+			template<int size>
+			void read(std::string& string)
+			{
+				// Pull inverted c-style string stored in the message
+				char data[size];
+				int i{static_cast<int>(this->body.size()) - 1}, j{0};
+				while (i >= 0 && j < size - 1) {
+					std::memcpy(data + j, this->body.data() + i, 1);
+					if(data[j] == '\0')
+						break;
+					i--;
+					j++;
+				}
+				if(data[j] != '\0')
+					data[j] = '\0';
+
+				string = std::string(data);
+
+				// Cache the location towards the end of the vector where the pulled data starts
+				size_t t = this->body.size() - (j+1);
+
+				// Shrink the vector to remove read bytes, and reset end position
+				this->body.resize(t);
+
+				// Recalculate the message size
+				this->header.size = this->size();
+			}
 		};
 
 
