@@ -30,7 +30,15 @@ enum class CustomMsgTypes : uint32_t
 	ErrorMessage,
 };
 
+typedef struct {
+	bool done {false};
+	double x {0.5}, y {0.5};
+	int score {0};
+} Game_Info;
 
+namespace custom_struct_utils {
+	std::string toString(Game_Info info);
+}
 
 class CustomClient : public olc::net::client_interface<CustomMsgTypes> {
 public:
@@ -42,9 +50,9 @@ public:
 
 	void JoinCustomSession(std::string session_id);
 
-	void SendGameInfo(JSON* local_data);
+	void SendGameInfo(Game_Info* game_info);
 	
 	void LeaveSession();
 
-	STATE handleIncoming(JSON* serverData);
+	STATE handleIncoming(Game_Info* game_info);
 };

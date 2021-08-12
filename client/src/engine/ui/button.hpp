@@ -9,7 +9,7 @@ class EventHandler;
 typedef struct
 {
     bool active, select, pressed, selected;
-} state;
+} State;
 
 class Button final : public UI_Element {
 private:
@@ -19,7 +19,7 @@ private:
     // must implement animations for button presses to feel real
     std::function<void(const GraphicsContext& context, const EventHandler& handler, Button& button)> callback;
     std::shared_ptr<EventHandler> handler;
-    state state { false };
+    State state { false };
 
 public:
     Button(std::shared_ptr<GraphicsContext> context, std::shared_ptr<EventHandler> handler, std::shared_ptr<Layout> layout, const unsigned int id, bool active = true, bool select = false, SDL_Color color = SDL_Color({0, 0, 0, 0}), SDL_Rect rect = SDL_Rect({0, 0, 0, 0}));

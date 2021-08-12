@@ -1,8 +1,4 @@
-#include <iostream>
-#include "../dependencies/net_framework/olc_net.h"
-#include "../dependencies/nlohmann/json.hpp"
-
-using JSON = nlohmann::json;
+#include "server.hpp"
 
 enum class CustomMsgTypes : uint32_t
 {
@@ -16,14 +12,6 @@ enum class CustomMsgTypes : uint32_t
 	LeaveSession,
 	ErrorMessage,
 };
-// enum class CustomMsgTypes : uint32_t
-// {
-// 	ServerAccept,
-// 	ServerDeny,
-// 	ServerPing,
-// 	MessageAll,
-// 	ServerMessage,
-// };
 
 typedef struct {
 	double x, y;
@@ -33,6 +21,20 @@ typedef struct {
 	Pos pos;
 	double v;
 } Ball;
+
+typedef struct {
+	bool done {false};
+	double x {0.5}, y {0.5};
+	int score {0};
+} Game_Info;
+
+namespace custom_struct_utils {
+	std::string toString(Game_Info info) {
+		std::ostringstream oss;
+		oss << "\ndone: " << (info.done ? "true" : "false") << ",\tscore: " << info.score << "\nracket:\tx: " << info.x << ", y: " << info.y << '\n';
+		return oss.str();
+	}
+}
 
 class Player {
 private:
@@ -44,7 +46,7 @@ public:
 	Player(std::shared_ptr<olc::net::connection<CustomMsgTypes>> connection, std::string username)
 		:	client {connection}, username { username }, score{0}, racket({0.05, 0.475}) {}
 	
-	std::shared_ptr<olc::net::connection<CustomMsgTypes>> getConnection() { return client; }
+	std::shared_ptr<olc::net::connection<CustomMsgTypes>> getConnection() const { return client; }
 
 	void update(Pos racket, int score) {
 		this->racket = racket;
@@ -74,6 +76,7 @@ public:
 	static int count;
 	Session()
 		:	session_id {count}, state { STATE::EMPTY }, ball {{0.5, 0.5}, 0.006} {
+		std::cout << "Created new session with session_id: " << this->session_id << '\n';
 		count++;
 	}
 
@@ -110,21 +113,22 @@ public:
 
 	Player* getPlayerById(int id) { 
 		try {
-			return &clients.at(id);
+			return &(clients.at(id));
 		} catch (std::exception e) {
 			return nullptr;
 		}
 	}
 	std::shared_ptr<olc::net::connection<CustomMsgTypes>> getOpponent(int id) {
-		auto iterator = clients.begin();
+		auto iterator = clients.cbegin();
 		std::shared_ptr<olc::net::connection<CustomMsgTypes>> client;
-		while(iterator != clients.end()) {
+		while(iterator != clients.cend()) {
 			client = iterator->second.getConnection();
-			if(client) {
-				if(client->GetID() != id) return client;
+			if(client->GetID() != id) {
+				return client;
 			}
+			iterator++;
 		}
-		return nullptr;
+		return std::shared_ptr<olc::net::connection<CustomMsgTypes>>(nullptr);
 	}
 };
 
@@ -133,7 +137,7 @@ int Session::count {0};
 class SessionHandler {
 private:
 	// maps client ids and session_id to session objects
-	std::map<int, Session> sessions;
+	std::map<int, std::shared_ptr<Session>> sessions;
 
 public:
 	SessionHandler() = default;
@@ -142,37 +146,39 @@ public:
 		if(sessions.size() > 0) {
 			auto iterator{ sessions.begin() };
 			while( iterator != sessions.end() ) {
-				if(iterator->second.getState() == STATE::WAITING) {
-					if(!this->addClientToSession(player, iterator->second.getId()))
+				if(iterator->second->getState() == STATE::WAITING) {
+					if(!this->addClientToSession(player, iterator->second->getId()))
 						return -1;
+					std::cout << "client [" << player.GetID() << "] added to sesssion [" << iterator->first << "]\n";
 					return iterator->first;
 				}
+				iterator++;
 			}
 		}
 		return this->addClientToNewSession(player);
 	}
 
 	bool addClientToSession(Player player, int id) {
-		if(!sessions.at(id).addClient(player)) return false;
+		if(!(sessions.at(id)->addClient(player))) return false;
 		sessions.insert(std::make_pair(player.GetID(), sessions.at(id)));
 		return true;
 	}
 
 	int addClientToNewSession(Player player) {
-		std::cout << "Adding client [ " << player.GetID() << " ] to new session...\n";
-		Session newSession;
-		int id = newSession.getId();
+		std::shared_ptr<Session> newSession{ std::make_shared<Session>() };
+		int id = newSession->getId();
 		sessions.insert(std::make_pair(id, newSession));
-		if(!this->addClientToSession(player, id))
+		if(!(this->addClientToSession(player, id)))
 			return -1;
+		std::cout << "Adding client [ " << player.GetID() << " ] to new session " << id << "...\n";
 		return id;
 	}
 
 	int addNewSession(Player client1, Player client2) {
-		Session newSession;
-		newSession.addClient(client1);
-		newSession.addClient(client2);
-		int id = newSession.getId();
+		std::shared_ptr<Session> newSession{ std::make_shared<Session>() };
+		newSession->addClient(client1);
+		newSession->addClient(client2);
+		int id = newSession->getId();
 		sessions.insert(std::make_pair(id, newSession));
 		sessions.insert(std::make_pair(client1.GetID(), newSession));
 		sessions.insert(std::make_pair(client2.GetID(), newSession));
@@ -192,32 +198,30 @@ public:
 	int getSessionIdByPlayerId(int id) {
 		auto iterator{ sessions.begin() };
 		while( iterator != sessions.end() ) {
-			if(iterator->second.getPlayerById(id)) {
-				return iterator->second.getId();
+			if(iterator->second->getPlayerById(id)) {
+				return iterator->second->getId();
 			}
+			iterator++;
 		}
 		return -1;
 	}
 
 	void removeClientFromSession(int id) {
 		try {
-			this->sessions.at(id).removeClient(id);
-			if(this->sessions.at(id).getState() == STATE::EMPTY)
-				this->sessions.erase(id);
+			std::shared_ptr<Session> session = this->sessions.at(id);
+			session->removeClient(id);
+			this->sessions.erase(id);
+			if(session->getState() == STATE::EMPTY)
+				this->sessions.erase(session->getId());
 		} catch (std::exception e) {
+			std::cout << "Failed to remove client from session\n";
 			return;
 		}
-		// int session_id = this->getSessionIdByPlayerId(id);
-		// if(session_id < 0)
-		// 	return;
-		// this->sessions.at(session_id).removeClient(id);
-		// if(this->sessions.at(session_id).getState() == STATE::EMPTY)
-		// 	this->sessions.erase(session_id);
 	}
 
 	bool updateSession(std::shared_ptr<olc::net::connection<CustomMsgTypes>> client, Pos racket, int score) {
 		try {
-			Player* player = sessions.at(client->GetID()).getPlayerById(client->GetID());
+			Player* player = sessions.at(client->GetID())->getPlayerById(client->GetID());
 			if(player) {
 				player->update(racket, score);
 				player = nullptr;
@@ -227,32 +231,22 @@ public:
 		} catch (std::exception e) {
 			return false;
 		}
-		// auto iterator{ sessions.begin() };
-		// while( iterator != sessions.end() ) {
-		// 	Player* player = iterator->second.getPlayerById(client->GetID());
-		// 	if(player) {
-		// 		player->update(racket, score);
-		// 		player = nullptr;
-		// 		return true;
-		// 	}
-		// 	player = nullptr;
-		// }
-		// return false;
 	}
 
 	std::shared_ptr<olc::net::connection<CustomMsgTypes>> getOpponent(int id) {
-		auto iterator{ sessions.begin() };
-		while( iterator != sessions.end() ) {
-			if(iterator->second.getPlayerById(id)) {
-				return iterator->second.getOpponent(id);
-			}
+		std::cout <<  "Call to getOpponent!\n";
+		try {
+			return sessions.at(id)->getOpponent(id);
 		}
-		return nullptr;
+		catch (std::exception e) {
+			std::cout << "Failed to retrieve opponent!\n";
+			return std::shared_ptr<olc::net::connection<CustomMsgTypes>>{nullptr};
+		}
 	}
 
 	bool getSessionState(int client_id, STATE* state) {
 		try {
-			*state = this->sessions.at(client_id).getState();
+			*state = this->sessions.at(client_id)->getState();
 			return true;
 		} catch (std::exception e) {
 			return false;
@@ -280,6 +274,7 @@ protected:
 	// Called when a client appears to have disconnected
 	virtual void OnClientDisconnect(std::shared_ptr<olc::net::connection<CustomMsgTypes>> client) {
 		std::cout << "Removing client [" << client->GetID() << "]\n";
+		session_handler.removeClientFromSession(client->GetID());
 	}
 
 	// Called when a message arrives
@@ -297,27 +292,27 @@ protected:
 		
 		case CustomMsgTypes::JoinCustomSession:
 		{
-			std::string data_string;
-			msg >> data_string;
-			JSON data = JSON::parse(data_string);
-			std::cout << "[" << client->GetID() << "]: Joining Custom Session with id [ " << data["session_id"] << " ]\n";
-			std::cout << "[" << client->GetID() << "]: data [ " << data << " ]\n";
-			if(session_handler.addClientToSession(Player(client, data["username"]), data["session_id"])) {
+			std::string username;
+			int session_id;
+			msg.read<50>(username);
+			msg >> session_id;
+			std::cout << "[" << client->GetID() << "]: '" << username << "' has requested to join custom session '" << session_id << "'\n";
+			if(session_handler.addClientToSession(Player(client, username), session_id)) {
 				olc::net::message<CustomMsgTypes> response;
 				response.header.id = CustomMsgTypes::JoinCustomSession;
 				std::shared_ptr<olc::net::connection<CustomMsgTypes>> client2 = session_handler.getOpponent(client->GetID());
-				if(client2) {
+				if(client2.get()) {
 					response << 0;
-					client2->Send(response);
+					this->MessageClient(client2, response);
 				} else
 					response << 1;
-				client->Send(response);
+				this->MessageClient(client, response);
 			}
 			else {
 				olc::net::message<CustomMsgTypes> msg;
 				msg.header.id = CustomMsgTypes::ErrorMessage;
 				msg << 11;
-				client->Send(msg);
+				this->MessageClient(client, msg);
 			}
 		}
 		break;
@@ -325,7 +320,7 @@ protected:
 		case CustomMsgTypes::JoinRandomSession:
 		{
 			std::string username;
-			msg >> username;
+			msg.read<50>(username);
 			std::cout << "[" << client->GetID() << "]: Joining Random Session with username <" << username << ">\n";
 
 			int session_id = session_handler.addClientToRandomSession(Player(client, username));
@@ -343,66 +338,48 @@ protected:
 							std::shared_ptr<olc::net::connection<CustomMsgTypes>> client2 (session_handler.getOpponent(client->GetID()));
 							if(client2.get()) {
 								response << 0;
-								client2->Send(response);
+								this->MessageClient(client2, response);
 							}
 							break;
 					}
 				}
-				client->Send(response);
+				this->MessageClient(client, response);
 			}
 			else {
 				olc::net::message<CustomMsgTypes> msg;
 				msg.header.id = CustomMsgTypes::ErrorMessage;
 				msg << 12;
-				client->Send(msg);
+				this->MessageClient(client, msg);
 			}
 		}
 		break;
 
 		case CustomMsgTypes::GameInfo:
 		{
-			std::string game_info_string;
-			msg >> game_info_string;
-			JSON game_info = JSON::parse(game_info_string);
-			Pos racket { game_info["racket"]["x"], game_info["racket"]["y"] };
+			Game_Info info;
+			msg >> info;
+			std::cout << "Received game_info from [" << client->GetID() << "]:" << custom_struct_utils::toString(info);
 			olc::net::message<CustomMsgTypes> response;
-			if(session_handler.updateSession(client, racket, game_info["score"])) {
-				response.header.id = CustomMsgTypes::GameInfo;
-				std::ostringstream oss;
-				oss <<
-				"{"
-					"'done': false,"
-					"'racket': {"
-					"'x': " << 1 - racket.x << ","
-					"'y': " << racket.y <<
-					"},"
-					"'score': " << game_info["score"] <<
-				"{";
-				std::string data = oss.str();
-				response << data;
-				session_handler.getOpponent(client->GetID())->Send(response);
-			}
-			else {
-				response.header.id = CustomMsgTypes::ErrorMessage;
-				response << 21;
-			}
-			if(game_info["done"])
+			// if(session_handler.updateSession(client, {info.x, info.y}, info.score)) {
+				std::shared_ptr<olc::net::connection<CustomMsgTypes>> opponent = session_handler.getOpponent(client->GetID());
+				if(opponent.get()) {
+					response.header.id = CustomMsgTypes::GameInfo;
+					info.x = 1 - info.x;
+					response << info;
+					std::cout << "Sending game_info to opponent: [" << opponent->GetID() << "]" << custom_struct_utils::toString(info);
+					this->MessageClient(opponent, response);
+				}
+			//}
+				else {
+					response.header.id = CustomMsgTypes::ErrorMessage;
+					response << 21;
+					this->MessageClient(client, response);
+					info.done = true;
+				}
+			if(info.done)
 				session_handler.removeClientFromSession(client->GetID());
 		}
 		break;
-
-		// case CustomMsgTypes::MessageAll:
-		// {
-		// 	std::cout << "[" << client->GetID() << "]: Message All\n";
-
-		// 	// Construct a new message and send it to all clients
-		// 	olc::net::message<CustomMsgTypes> msg;
-		// 	msg.header.id = CustomMsgTypes::ServerMessage;
-		// 	msg << client->GetID();
-		// 	MessageAllClients(msg, client);
-
-		// }
-		// break;
 		}
 	}
 };
@@ -411,11 +388,9 @@ int main() {
 	CustomServer server(3000); 
 	server.Start();
 
-	while (1) {
+	while (true) {
 		server.Update(-1, true);
 	}
-	
-
 
 	return 0;
 }
