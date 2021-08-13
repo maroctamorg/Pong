@@ -50,7 +50,7 @@
 
 	Author
 	~~~~~~
-	David Barr, aka javidx9, ©OneLoneCoder 2019, 2020
+	David Barr, aka javidx9, ï¿½OneLoneCoder 2019, 2020
 
 */
 
@@ -121,6 +121,8 @@ namespace olc
 							if (!ec)
 							{
 								ReadHeader();
+							} else {
+								std::cerr << ec.message() << '\n';
 							}
 						});
 				}

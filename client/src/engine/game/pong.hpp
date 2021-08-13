@@ -1,6 +1,9 @@
 #ifndef PONG_HPP
 #define PONG_HPP
 
+#include <thread>
+#include <chrono>
+
 #include "../../../dependencies/nlohmann/json.hpp"
 #include "../../services/client.hpp"
 #include "../../utilities/timer.hpp"
@@ -13,6 +16,22 @@ enum DIR {
     UP,
     DOWN,
 };
+
+typedef struct {
+    double x, y;
+} Pos;
+
+typedef struct {
+	bool done {false};
+	Pos racketPos {0.5, 0.5};
+	int score {0};
+    Pos ballPos {0.4875, 0.4875 };
+    Pos ballVel {0.025, 0.025};
+} Game_Info;
+
+namespace custom_struct_utils {
+	std::string toString(Game_Info info);
+}
 
 class Point {
 private:
@@ -47,21 +66,22 @@ public:
 class Ball {
 public:
     static const Rect b_inRect;
-    static const Point b_inVel;
+    const Point b_inVel { 0.001, 0 };
 
 private:
-    Point bVel { 0.0001, 0 };
+    Point bVel { 0.001, 0 };
     Rect bRect { 0.4875, 0.4875, 0.025, 0.025 };
     
 public:
     Ball() = default;
-    // Ball(int v);
+    Ball(Point v)
+        :   b_inVel(v), bVel(v), bRect{ 0.4875, 0.4875, 0.025, 0.025 } {};
     
     Rect& getRect();
     Point& getVel();
 
-    // void setPos(double x, double y);
-    // void setVel(double x, double y);
+    void setPos(double x, double y);
+    void setVel(double x, double y);
 
     void move();
     void display(SDL_Renderer *renderer, const SDL_Rect &window_rect);
@@ -82,7 +102,7 @@ class Paddle {
         Point getPos();
         Rect& getRect();
 
-        void move(const Point &cursorPos, bool remote);
+        void move(const Pos &cursorPos, bool remote);
         void display(SDL_Renderer *renderer, const SDL_Rect &window_rect, bool remote);
 
 };
@@ -101,15 +121,17 @@ private:
     Paddle lcl_paddle;
     Paddle rmt_paddle;
     Rect lcl_goal { 0, 0.2, 0.01, 0.6 };  // !!!!!!!!!!
-    Rect rmt_goal { 0.99, 0.2, 0.01, 0.5 };  // !!!!!!!!!!
+    Rect rmt_goal { 0.99, 0.2, 0.01, 0.6 };  // !!!!!!!!!!
 
 public:
     Game(std::shared_ptr<GraphicsContext> context, std::shared_ptr<CustomClient> connection)
         :   context(context), connection(connection), background({0, 0, context->getWidth(), context->getHeight()}) {}
+    Game(std::shared_ptr<GraphicsContext> context, std::shared_ptr<CustomClient> connection, Point b_inVel)
+        :   context(context), connection(connection), background({0, 0, context->getWidth(), context->getHeight()}), ball(b_inVel) {}
 
 public:
     void checkCollision();
-    void update(Point lcl_pos, Point rmt_pos);
+    void update(Pos lcl_pos, Pos rmt_pos, Pos ballPos, Pos ballVel);
     void display();
     bool start();
 };

@@ -14,7 +14,8 @@ enum class CustomMsgTypes : uint32_t
 };
 
 typedef struct {
-	double x, y;
+	double x;
+	double y;
 } Pos;
 
 typedef struct {
@@ -24,14 +25,16 @@ typedef struct {
 
 typedef struct {
 	bool done {false};
-	double x {0.5}, y {0.5};
+	Pos racketPos {0.5, 0.5};
 	int score {0};
+    Pos ballPos {0.4875, 0.4875 };
+    Pos ballVel {0.025, 0.025};
 } Game_Info;
 
 namespace custom_struct_utils {
 	std::string toString(Game_Info info) {
 		std::ostringstream oss;
-		oss << "\ndone: " << (info.done ? "true" : "false") << ",\tscore: " << info.score << "\nracket:\tx: " << info.x << ", y: " << info.y << '\n';
+		oss << "\ndone: " << (info.done ? "true" : "false") << ",\tscore: " << info.score << "\nracket:\tx: " << info.racketPos.x << ", y: " << info.racketPos.y << '\n';
 		return oss.str();
 	}
 }
@@ -234,7 +237,7 @@ public:
 	}
 
 	std::shared_ptr<olc::net::connection<CustomMsgTypes>> getOpponent(int id) {
-		std::cout <<  "Call to getOpponent!\n";
+		// std::cout <<  "Call to getOpponent!\n";
 		try {
 			return sessions.at(id)->getOpponent(id);
 		}
@@ -333,17 +336,23 @@ protected:
 					switch (state) {
 						case STATE::WAITING :
 							response << 1;
+							this->MessageClient(client, response);
 							break;
 						case STATE::START :
 							std::shared_ptr<olc::net::connection<CustomMsgTypes>> client2 (session_handler.getOpponent(client->GetID()));
 							if(client2.get()) {
-								response << 0;
-								this->MessageClient(client2, response);
+								// response << 0.0 << 0.001 << 0;
+								response << Pos({0.001, 0.0}) << 0;
+								this->MessageClient(client, response);
+								olc::net::message<CustomMsgTypes> response2;
+								response2.header.id = CustomMsgTypes::EstablishedSession;
+								// response2 << 0.0 << -0.001 << 0;
+								response2 << Pos({-0.001, 0.0}) << 0;
+								this->MessageClient(client2, response2);
 							}
 							break;
 					}
 				}
-				this->MessageClient(client, response);
 			}
 			else {
 				olc::net::message<CustomMsgTypes> msg;
@@ -358,15 +367,17 @@ protected:
 		{
 			Game_Info info;
 			msg >> info;
-			std::cout << "Received game_info from [" << client->GetID() << "]:" << custom_struct_utils::toString(info);
+			// std::cout << "Received game_info from [" << client->GetID() << "]:" << custom_struct_utils::toString(info);
 			olc::net::message<CustomMsgTypes> response;
 			// if(session_handler.updateSession(client, {info.x, info.y}, info.score)) {
 				std::shared_ptr<olc::net::connection<CustomMsgTypes>> opponent = session_handler.getOpponent(client->GetID());
 				if(opponent.get()) {
 					response.header.id = CustomMsgTypes::GameInfo;
-					info.x = 1 - info.x;
+					info.racketPos.x = 1 - info.racketPos.x;
+					info.ballPos.x = 1 - info.ballPos.x;
+					info.ballVel.x = -info.ballVel.x;
 					response << info;
-					std::cout << "Sending game_info to opponent: [" << opponent->GetID() << "]" << custom_struct_utils::toString(info);
+					// std::cout << "Sending game_info to opponent: [" << opponent->GetID() << "]" << custom_struct_utils::toString(info);
 					this->MessageClient(opponent, response);
 				}
 			//}

@@ -80,7 +80,7 @@ namespace olc
 			{
 				try
 				{
-					// Resolve hostname/ip-address into tangiable physical address
+					// Resolve hostname/ip-address into tangible physical address
 					asio::ip::tcp::resolver resolver(m_context);
 					asio::ip::tcp::resolver::results_type endpoints = resolver.resolve(host, std::to_string(port));
 

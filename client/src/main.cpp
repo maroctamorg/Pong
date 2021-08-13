@@ -1,6 +1,11 @@
 #include "main.hpp"
 #include "ui/test_menu.hpp"
 
+typedef struct {
+    double x;
+    double y;
+} Start_Game_Info;
+
 int main() {
     std::shared_ptr<GraphicsContext> g_context = std::make_shared<GraphicsContext>(800, 600);
     std::cout << "Succesfully initialised graphicsContext!\n";
@@ -9,42 +14,30 @@ int main() {
     while(!done) {
         // ESTABLISH A CONNECTION TO THE SERVER
         std::shared_ptr<CustomClient> c { std::make_shared<CustomClient>() };
-        if(!c->Connect("127.0.0.1", 3000)) {
-            std::cout << "Failed to establish a connection to server! Quitting!\n";
-            done = true;
-            break;
+        c->Connect("127.0.0.1", 3000);
+        while(!c->IsConnected()) {
+            std::cout << "Establishing a connection to server...\n";
         }
-        if(done) break;
-
-        // int c_counter {0};
-        // while(!c->Connect("127.0.0.1", 3000) && !done) {
-        //     if(c_counter > 100) {
-        //         std::cout << "Failed to establish a connection to server! Quitting!\n";
-        //         done = true;
-        //         break;
-        //     }
-        //     std::cout << "Establishing connection to server..." << c_counter << "\n";
-        //     c_counter++;
-        // }
-        // if(done) break;
 
         std::shared_ptr<EventHandler> handler { std::make_shared<EventHandler>() };
         std::shared_ptr<Menu> test_menu = Test_Menu::construct(g_context, handler, std::weak_ptr<CustomClient>(c));
 
         Event event;
         STATE state { STATE::ESTABLISHING };
+        Start_Game_Info server_info;
         bool menu_done { false };
         int c_counter { 0 };
         while(!menu_done) {
-            state = c->handleIncoming(nullptr);
+            state = c->handleIncoming(&server_info);
             switch(state) {
                 case STATE::END:
                     std::cout << "Disconnected from server!\n";
                     done = true;
                     break;
                 case STATE::START:
-                    std::cout << "Starting match...\n";
+                    std::cout << "Starting match with ball velocity:\tx: "<< server_info.x << "\n";
                     menu_done = true;
+                    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
                     break;
                 case STATE::WAITING:
                     std::cout << "Established session with server; waiting for opponent...\n";
@@ -84,10 +77,9 @@ int main() {
                 }
             }
         }
-        
         if(done) break;
 
-        Game game {g_context, c};
+        Game game {g_context, c, {server_info.x, server_info.y}};
         done = game.start();
 
         c->Disconnect();

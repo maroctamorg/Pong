@@ -31,7 +31,6 @@ SDL_Rect operator*(const Rect& rect, const SDL_Rect& context) {
 }
 
 const Rect Ball::b_inRect {0.4875, 0.4875, 0.025, 0.025};
-const Point Ball::b_inVel {0.001, 0};
 
 // Ball::Ball(int v): bVel { v, 0 }, bPos { 400, 250 }, bRect { 390, 240, 20, 20 } {};
 
@@ -42,12 +41,14 @@ Point& Ball::getVel() {
     return this->bVel;
 }
 
-// void Ball::setPos(double x, double y) {
-//     this->bPos = { x, y };
-// }
-// void Ball::setVel(double x, double y) {
-//     this->bVel = { x, y };
-// }
+void Ball::setPos(double x, double y) {
+    this->bRect.x = x;
+    this->bRect.y = y;
+}
+void Ball::setVel(double x, double y) {
+    this->bVel.x = x;
+    this->bVel.y = y;
+}
 
 void Ball::move(){
     bRect.x += bVel.x;
@@ -75,7 +76,7 @@ Rect& Paddle::getRect() {
     return this->padRct;
 }
 
-void Paddle::move(const Point &cursorPos, bool remote) {
+void Paddle::move(const Pos &cursorPos, bool remote) {
     
     if (cursorPos.x <= 0.5 && !remote) {
         padRct.x = cursorPos.x;
@@ -112,11 +113,12 @@ void Game::checkCollision() {
         score[1] += 1;
         bRect = this->ball.b_inRect;
         bVel = this->ball.b_inVel;
-    } else if (checkRelCollision(this->context.get(), bRect, this->rmt_goal)) {
-        score[0] += 1;
-        bRect = this->ball.b_inRect;
-        bVel = {-this->ball.b_inVel.x, -this->ball.b_inVel.y};
     }
+    // else if (checkRelCollision(this->context.get(), bRect, this->rmt_goal)) {
+    //     score[0] += 1;
+    //     bRect = this->ball.b_inRect;
+    //     bVel = {-this->ball.b_inVel.x, -this->ball.b_inVel.y};
+    // }
 
     // CHECK FOR BOUNCE ON EDGES
     if (bRect.x >= 1) {
@@ -138,10 +140,10 @@ void Game::checkCollision() {
     Rect& lcl_pad_pos = this->lcl_paddle.getRect();
     Rect& rmt_pad_pos = this->rmt_paddle.getRect();
 
-    // CHECK FOR LOCAL AND REMOTE PADDLE COLLISIONS
+    // CHECK FOR LOCAL ---AND REMOTE--- PADDLE COLLISIONS
     if (checkRelCollision(this->context.get(), bRect, lcl_pad_pos)) {
         if(bRect.x < lcl_pad_pos.x + static_cast<int>(lcl_pad_pos.w/2)) {
-            bRect.x = lcl_pad_pos.x;
+            bRect.x = lcl_pad_pos.x - bRect.w;
             bVel.x = bVel.x >= 0 ? -bVel.x : bVel.x;
         } else {
             bRect.x = lcl_pad_pos.x + lcl_pad_pos.w;
@@ -152,25 +154,28 @@ void Game::checkCollision() {
         } else if (lcl_pad_pos.y > 0.5) {
             bVel.y = bVel.y >= 0 ? (bVel.y == 0 ? -this->ball.b_inVel.x : -bVel.y) : bVel.y;
         }
-    } else if (checkRelCollision(this->context.get(), bRect, rmt_pad_pos)) {
-        if(bRect.x < rmt_pad_pos.x + static_cast<int>(rmt_pad_pos.w/2)) {
-            bRect.x = rmt_pad_pos.x;
-            bVel.x = bVel.x >= 0 ? -bVel.x : bVel.x;
-        } else {
-            bRect.x = rmt_pad_pos.x + rmt_pad_pos.w;
-            bVel.x = bVel.x >= 0 ? bVel.x : -bVel.x;
-        }
-        if (rmt_pad_pos.y <= 0.5) {
-            bVel.y = bVel.y >= 0 ? (bVel.y == 0 ? this->ball.b_inVel.x : bVel.y) : -bVel.y;
-        } else if (rmt_pad_pos.y > 0.5) {
-            bVel.y = bVel.y >= 0 ? (bVel.y == 0 ? -this->ball.b_inVel.x : -bVel.y) : bVel.y;
-        }
     }
+    // else if (checkRelCollision(this->context.get(), bRect, rmt_pad_pos)) {
+    //     if(bRect.x < rmt_pad_pos.x + static_cast<int>(rmt_pad_pos.w/2)) {
+    //         bRect.x = rmt_pad_pos.x - bRect.w;
+    //         bVel.x = bVel.x >= 0 ? -bVel.x : bVel.x;
+    //     } else {
+    //         bRect.x = rmt_pad_pos.x + rmt_pad_pos.w;
+    //         bVel.x = bVel.x >= 0 ? bVel.x : -bVel.x;
+    //     }
+    //     if (rmt_pad_pos.y <= 0.5) {
+    //         bVel.y = bVel.y >= 0 ? (bVel.y == 0 ? this->ball.b_inVel.x : bVel.y) : -bVel.y;
+    //     } else if (rmt_pad_pos.y > 0.5) {
+    //         bVel.y = bVel.y >= 0 ? (bVel.y == 0 ? -this->ball.b_inVel.x : -bVel.y) : bVel.y;
+    //     }
+    // }
 }
 
-void Game::update(Point lcl_pos, Point rmt_pos) {
+void Game::update(Pos lcl_pos, Pos rmt_pos, Pos ballPos, Pos ballVel) {
     lcl_paddle.move(lcl_pos, false);
     rmt_paddle.move(rmt_pos, true);
+    ball.setPos(ballPos.x, ballPos.y);
+    ball.setVel(ballVel.x, ballVel.y);
     ball.move();
 
     this->checkCollision();
@@ -200,19 +205,24 @@ void Game::display() {
     SDL_RenderPresent(this->context->renderer);
 }
 
+std::string custom_struct_utils::toString(Game_Info info) {
+    std::ostringstream oss;
+    oss << "\ndone: " << (info.done ? "true" : "false") << ",\tscore: " << info.score << "\nracket:\tx: " << info.racketPos.x << ", y: " << info.racketPos.y << '\n';
+    return oss.str();
+}
+
 bool Game::start() {
-    SDL_Event event;
-    Point lcl_cursor_pos { 0.5, 0.5 };
-    Point rmt_cursor_pos { 0.5, 0.5 };
-    Game_Info lData;
-    bool update;
-    STATE state { STATE::START };
-    Timer gLoop;
+    Pos lcl_cursor_pos { 0.5, 0.5 };
+    Pos rmt_cursor_pos { 0.5, 0.5 };
+    Pos ballPos { this->ball.getRect().x, this->ball.getRect().y };
+    Pos ballVel { this->ball.getVel().x, this->ball.getVel().y };
     bool done {false};
 
-    std::thread server_update_thr = std::thread([&state, &done, &rmt_cursor_pos, &lData, &update, connection { this->connection }]() {
+    std::thread server_update_thr = std::thread([this, &done, &rmt_cursor_pos, &ballPos, &ballVel, connection { this->connection }]() mutable {
+        STATE state { STATE::START };
         Game_Info sData;
         int counter {-1};
+        Timer sLoop;
         while(!done) {
             counter++;
             state = connection->handleIncoming(&sData);
@@ -228,62 +238,82 @@ bool Game::start() {
                 done = true;
                 break;
             case (STATE::GAME_INFO) :
-                std::cout << "Received game info from server: " << custom_struct_utils::toString(sData) << '\n';
-                rmt_cursor_pos = { sData.x, sData.y };
+                // std::cout << "Received game info from server: " << custom_struct_utils::toString(sData) << '\n';
+                rmt_cursor_pos = sData.racketPos;
+                ballPos = sData.ballPos;
+                ballVel = sData.ballVel;
+                this->checkCollision();
                 counter = -1;
                 break;
             default :
                 std::cout << "Unhandled server response!\n";
                 counter = -1;
             }
+
+            // consistent 240 Hz communication
+            // std::cout << "server update thread elapsed time: " << sLoop.elapsed() << '\n';
+            std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(1000*(1.0/240 - sLoop.elapsed()))));
+            sLoop.reset();
         }
     });
 
+    std::thread display_thr = std::thread([this, &done, &lcl_cursor_pos, &rmt_cursor_pos, &ballPos, &ballVel]() {
+        Timer gLoop;
+        while(!done) {
+            // UPDATE
+            this->update(lcl_cursor_pos, rmt_cursor_pos, ballPos, ballVel);
+            ballPos = { this->ball.getRect().x, this->ball.getRect().y };
+            ballVel = { this->ball.getVel().x, this->ball.getVel().y };
+            // DISPLAY
+            this->display();
+
+            // wait appropriate time - 120FPS
+            // std::cout << "display thread elapsed time: " << gLoop.elapsed() << '\n';
+            std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(1000*(1.0/120 - gLoop.elapsed()))));
+            // reset timer
+            gLoop.reset();
+        }
+    });
+
+    // GET USER INPUT
+    int x, y;
+    SDL_Event event;
+    Game_Info lData;
     while(!done) {
-        if(SDL_PollEvent(&event)) {
-            switch(event.type) {
-                case (SDL_QUIT): {
-                        done = true;
-                        break;
-                    }
-                case (SDL_WINDOWEVENT): {
-                    if(event.window.event == SDL_WINDOWEVENT_RESIZED) {
-                        this->context->updateWindowSize(event.window.data1, event.window.data2);
-                        // std::cout << "Resized window:\t" << event.window.data1 << ", " << event.window.data2 << "\t" << g_context.getWidth() << ", " << g_context.getHeight() << "\n";
-                    }
+        if(!SDL_PollEvent(&event))
+            continue;
+        switch(event.type) {
+            case (SDL_QUIT): {
+                    done = true;
                     break;
                 }
+            case (SDL_WINDOWEVENT): {
+                if(event.window.event == SDL_WINDOWEVENT_RESIZED) {
+                    context->updateWindowSize(event.window.data1, event.window.data2);
+                    // std::cout << "Resized window:\t" << event.window.data1 << ", " << event.window.data2 << "\t" << g_context.getWidth() << ", " << g_context.getHeight() << "\n";
+                }
+                break;
+            }
+            case (SDL_MOUSEMOTION): {
+                SDL_GetMouseState(&x, &y);
+                lcl_cursor_pos.x = (1.0*x) / context->getWidth();
+                lcl_cursor_pos.y = (1.0*y) / context->getHeight();
+                // std::cout << "Mouse State obtained: (" << cursorPos.x << ", "<< cursorPos.y << ")\n";
+
+                // POST LOCAL DATA TO SERVER
+                lData.done = done;
+                lData.racketPos = lcl_cursor_pos;
+                lData.score = this->score[0];
+                lData.ballPos = ballPos;
+                lData.ballVel = ballVel;
+                connection->SendGameInfo<Game_Info>(&lData);
+                break;
             }
         }
-        int x, y;
-        SDL_GetMouseState(&x, &y);
-        lcl_cursor_pos.x = (1.0*x) / this->context->getWidth();
-        lcl_cursor_pos.y = (1.0*y) / this->context->getHeight();
-        // std::cout << "Mouse State obtained: (" << cursorPos.x << ", "<< cursorPos.y << ")\n";
-        // state = this->connection->handleIncoming(&sData);
-
-        // POST LOCAL DATA TO SERVER
-        lData.done = done;
-        lData.x = lcl_cursor_pos.x;
-        lData.y = lcl_cursor_pos.y;
-        this->connection->SendGameInfo(&lData);
-
-        // UPDATE
-        this->update(lcl_cursor_pos, rmt_cursor_pos);
-
-        // STABLE FRAMES
-        // double elapsed = gLoop.elapsed();
-        // std::cout << "Game Loop Length:\t" << elapsed << '\n';
-        // wait appropriate time - 60FPS
-        sleep(1000*static_cast<int>(1/60 - gLoop.elapsed() > 0 ? 1/60 - gLoop.elapsed() : 0));
-        
-        // DISPLAY
-        this->display();
-
-        gLoop.reset();
     }
 
     if (server_update_thr.joinable()) server_update_thr.join();
+    if (display_thr.joinable()) display_thr.join();
 
     return true;
 }
