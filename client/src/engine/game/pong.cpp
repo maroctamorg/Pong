@@ -105,6 +105,52 @@ bool checkRelCollision(GraphicsContext* context, Rect r_rect1, Rect r_rect2) {
     return SDL_HasIntersection(&rect1, &rect2);
 }
 
+void Game::checkPaddleAndGoalCollisions(Pos& ballPos, Pos& ballVel) {
+    Rect bRect = this->ball.getRect();
+    
+    if(checkRelCollision(this->context.get(), Rect(ballPos.x, ballPos.y, bRect.w, bRect.h), this->lcl_goal)) {
+        score[1] += 1;
+        ballPos = { this->ball.b_inRect.x, this->ball.b_inRect.y };
+        ballVel = { this->ball.b_inVel.x, this->ball.b_inVel.y };
+    }
+
+    // CHECK FOR BOUNCE ON EDGES
+    if (ballPos.x >= 1) {
+        ballPos.x = 1;
+        ballVel.x = -ballVel.x;
+    } else if (ballPos.x <= 0) {
+        ballPos.x = 0;
+        ballVel.x = -ballVel.x;
+    }
+
+    if (ballPos.y >= 1) {
+        ballPos.y = 1;
+        ballVel.y = -ballVel.y;
+    } else if (ballPos.y <= 0) {
+        ballPos.y = 0;
+        ballVel.y = -ballVel.y;
+    }
+
+    Rect& lcl_pad_pos = this->lcl_paddle.getRect();
+    Rect& rmt_pad_pos = this->rmt_paddle.getRect();
+
+    // CHECK FOR LOCAL ---AND REMOTE--- PADDLE COLLISIONS
+    if (checkRelCollision(this->context.get(), Rect(ballPos.x, ballPos.y, bRect.w, bRect.h), lcl_pad_pos)) {
+        if(ballPos.x < lcl_pad_pos.x + static_cast<int>(lcl_pad_pos.w/2)) {
+            ballPos.x = lcl_pad_pos.x - bRect.w;
+            ballVel.x = ballVel.x >= 0 ? -ballVel.x : ballVel.x;
+        } else {
+            ballPos.x = lcl_pad_pos.x + lcl_pad_pos.w;
+            ballVel.x = ballVel.x >= 0 ? ballVel.x : -ballVel.x;
+        }
+        if (lcl_pad_pos.y <= 0.5) {
+            ballVel.y = ballVel.y >= 0 ? (ballVel.y == 0 ? this->ball.b_inVel.x : ballVel.y) : -ballVel.y;
+        } else if (lcl_pad_pos.y > 0.5) {
+            ballVel.y = ballVel.y >= 0 ? (ballVel.y == 0 ? -this->ball.b_inVel.x : -ballVel.y) : ballVel.y;
+        }
+    }
+}
+
 void Game::checkCollision() {
     // CHECK FOR GOALS
     Rect& bRect = this->ball.getRect();
@@ -218,44 +264,45 @@ bool Game::start() {
     Pos ballVel { this->ball.getVel().x, this->ball.getVel().y };
     bool done {false};
 
-    std::thread server_update_thr = std::thread([this, &done, &rmt_cursor_pos, &ballPos, &ballVel, connection { this->connection }]() mutable {
-        STATE state { STATE::START };
-        Game_Info sData;
-        int counter {-1};
-        Timer sLoop;
-        while(!done) {
-            counter++;
-            state = connection->handleIncoming(&sData);
-            switch(state) {
-            case (STATE::QUIET) :
-                if(false && counter > 10000) {
-                    std::cout << "Communication with the server has failed, leaving match...\n";
-                    done = true;
-                    return false;
-                }
-                break;
-            case (STATE::END) :
-                done = true;
-                break;
-            case (STATE::GAME_INFO) :
-                // std::cout << "Received game info from server: " << custom_struct_utils::toString(sData) << '\n';
-                rmt_cursor_pos = sData.racketPos;
-                ballPos = sData.ballPos;
-                ballVel = sData.ballVel;
-                this->checkCollision();
-                counter = -1;
-                break;
-            default :
-                std::cout << "Unhandled server response!\n";
-                counter = -1;
-            }
+    // std::thread server_update_thr = std::thread([this, &done, &rmt_cursor_pos, &ballPos, &ballVel, connection { this->connection }]() mutable {
+    //     STATE state { STATE::START };
+    //     Game_Info sData;
+    //     int counter {-1};
+    //     Timer sLoop;
+    //     while(!done) {
+    //         counter++;
+    //         state = connection->handleIncoming(&sData);
+    //         switch(state) {
+    //         case (STATE::QUIET) :
+    //             if(false && counter > 10000) {
+    //                 std::cout << "Communication with the server has failed, leaving match...\n";
+    //                 done = true;
+    //                 return false;
+    //             }
+    //             break;
+    //         case (STATE::END) :
+    //             done = true;
+    //             break;
+    //         case (STATE::GAME_INFO) :
+    //             // std::cout << "Received game info from server: " << custom_struct_utils::toString(sData) << '\n';
+    //             rmt_cursor_pos = sData.racketPos;
+    //             ballPos = sData.ballPos;
+    //             ballVel = sData.ballVel;
+    //             // check for collisions with local paddle and goal for buffer variables ballPos and ballVel
+    //             // send response to server
+    //             counter = -1;
+    //             break;
+    //         default :
+    //             std::cout << "Unhandled server response!\n";
+    //             counter = -1;
+    //         }
 
-            // consistent 240 Hz communication
-            // std::cout << "server update thread elapsed time: " << sLoop.elapsed() << '\n';
-            std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(1000*(1.0/240 - sLoop.elapsed()))));
-            sLoop.reset();
-        }
-    });
+    //         // consistent 240 Hz communication
+    //         // std::cout << "server update thread elapsed time: " << sLoop.elapsed() << '\n';
+    //         std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(1000*(1.0/240 - sLoop.elapsed()))));
+    //         sLoop.reset();
+    //     }
+    // });
 
     std::thread display_thr = std::thread([this, &done, &lcl_cursor_pos, &rmt_cursor_pos, &ballPos, &ballVel]() {
         Timer gLoop;
@@ -279,40 +326,74 @@ bool Game::start() {
     int x, y;
     SDL_Event event;
     Game_Info lData;
+    Game_Info sData;
+    STATE state { STATE::START };
+    int counter {-1};
+    bool update { false };
     while(!done) {
-        if(!SDL_PollEvent(&event))
-            continue;
-        switch(event.type) {
-            case (SDL_QUIT): {
-                    done = true;
+        if(SDL_PollEvent(&event)) {
+            switch(event.type) {
+                case (SDL_QUIT): {
+                        done = true;
+                        break;
+                    }
+                case (SDL_WINDOWEVENT): {
+                    if(event.window.event == SDL_WINDOWEVENT_RESIZED) {
+                        context->updateWindowSize(event.window.data1, event.window.data2);
+                        // std::cout << "Resized window:\t" << event.window.data1 << ", " << event.window.data2 << "\t" << g_context.getWidth() << ", " << g_context.getHeight() << "\n";
+                    }
                     break;
                 }
-            case (SDL_WINDOWEVENT): {
-                if(event.window.event == SDL_WINDOWEVENT_RESIZED) {
-                    context->updateWindowSize(event.window.data1, event.window.data2);
-                    // std::cout << "Resized window:\t" << event.window.data1 << ", " << event.window.data2 << "\t" << g_context.getWidth() << ", " << g_context.getHeight() << "\n";
+                case (SDL_MOUSEMOTION): {
+                    update = true;
+                    SDL_GetMouseState(&x, &y);
+                    lcl_cursor_pos.x = (1.0*x) / context->getWidth();
+                    lcl_cursor_pos.y = (1.0*y) / context->getHeight();
+                    // std::cout << "Mouse State obtained: (" << cursorPos.x << ", "<< cursorPos.y << ")\n";
+                    break;
                 }
-                break;
             }
-            case (SDL_MOUSEMOTION): {
-                SDL_GetMouseState(&x, &y);
-                lcl_cursor_pos.x = (1.0*x) / context->getWidth();
-                lcl_cursor_pos.y = (1.0*y) / context->getHeight();
-                // std::cout << "Mouse State obtained: (" << cursorPos.x << ", "<< cursorPos.y << ")\n";
-
-                // POST LOCAL DATA TO SERVER
-                lData.done = done;
-                lData.racketPos = lcl_cursor_pos;
-                lData.score = this->score[0];
-                lData.ballPos = ballPos;
-                lData.ballVel = ballVel;
-                connection->SendGameInfo<Game_Info>(&lData);
-                break;
+        }
+        counter++;
+        state = connection->handleIncoming(&sData);
+        switch(state) {
+        case (STATE::QUIET) :
+            if(false && counter > 10000) {
+                std::cout << "Communication with the server has failed, leaving match...\n";
+                done = true;
+                return false;
             }
+            break;
+        case (STATE::END) :
+            done = true;
+            break;
+        case (STATE::GAME_INFO) :
+            // std::cout << "Received game info from server: " << custom_struct_utils::toString(sData) << '\n';
+            rmt_cursor_pos = sData.racketPos;
+            ballPos = sData.ballPos;
+            ballVel = sData.ballVel;
+            // check for collisions with local paddle and goal for buffer variables ballPos and ballVel
+            this->checkPaddleAndGoalCollisions(ballPos, ballVel);
+            update = true;
+            counter = -1;
+            break;
+        default :
+            std::cout << "Unhandled server response!\n";
+            counter = -1;
+        }
+        if(update) {
+            // POST LOCAL DATA TO SERVER
+            lData.done = done;
+            lData.racketPos = lcl_cursor_pos;
+            lData.score = this->score[0];
+            lData.ballPos = ballPos;
+            lData.ballVel = ballVel;
+            connection->SendGameInfo<Game_Info>(&lData);
+            update = false;
         }
     }
 
-    if (server_update_thr.joinable()) server_update_thr.join();
+    // if (server_update_thr.joinable()) server_update_thr.join();
     if (display_thr.joinable()) display_thr.join();
 
     return true;

@@ -130,6 +130,7 @@ public:
         :   context(context), connection(connection), background({0, 0, context->getWidth(), context->getHeight()}), ball(b_inVel) {}
 
 public:
+    void checkPaddleAndGoalCollisions(Pos& ballPos, Pos& ballVel);
     void checkCollision();
     void update(Pos lcl_pos, Pos rmt_pos, Pos ballPos, Pos ballVel);
     void display();
