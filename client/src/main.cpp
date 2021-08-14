@@ -32,23 +32,28 @@ int main() {
             switch(state) {
                 case STATE::END:
                     std::cout << "Disconnected from server!\n";
+                    Test_Menu::text->updateText("Disconnected from server! Quitting...");
                     done = true;
                     break;
                 case STATE::START:
                     std::cout << "Starting match with ball velocity:\tx: "<< server_info.x << "\n";
+                    Test_Menu::text->updateText("Starting match...");
                     menu_done = true;
                     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
                     break;
                 case STATE::WAITING:
                     std::cout << "Established session with server; waiting for opponent...\n";
+                    Test_Menu::text->updateText("Established session with server; waiting for opponent...");
                     break;
                 case STATE::ESTABLISHING:
                     if(c_counter > 1000) {
-                        std::cout << "Failed to establish a session with the server! Please try again at another time. Quitting!\n";
+                        std::cout << "Failed to establish a session with the server! Please try again at another time. Quitting...\n";
+                        Test_Menu::text->updateText("Failed to establish a session with the server! Please try again at another time. Quitting...");
                         done = true;
                         break;
                     }
                     std::cout << "Establishing session with server..." << c_counter << "\n";
+                    Test_Menu::text->updateText("Establishing session with server...");
                     c_counter++;
                     break;
             }

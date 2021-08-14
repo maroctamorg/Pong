@@ -40,8 +40,8 @@ public:
 
 	void JoinCustomSession(std::string session_id);
 
-	template <typename Server_Info>
-	void SendGameInfo(Server_Info* server_info) {
+	template <typename Local_Info>
+	void SendGameInfo(Local_Info* server_info) {
 		if(!server_info) return;
 		olc::net::message<CustomMsgTypes> msg;
 		msg.header.id = CustomMsgTypes::GameInfo;

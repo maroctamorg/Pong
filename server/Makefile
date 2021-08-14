@@ -2,7 +2,7 @@ CC = g++
 CFLAGS = -std=c++17
 INCLUDE = -I${HOME}/Library/include/asio-1.18.2/include
 LINKER_FLAGS = 
-SOURCES = server.cpp
+SOURCES = server.cpp match.cpp session.cpp
 SOURCE_OBJECT_FILES = $(shell basename -a ${SOURCES:.cpp=.o})
 TARGET = pong_server
 

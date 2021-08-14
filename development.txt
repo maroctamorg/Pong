@@ -1,0 +1,11 @@
+MAJOR PROJECT REFACTORING
+1.  create a server-side match object which handles shared game logic between clients (this to ensure synchronicity,
+and integrity of gameplay):
+    -   holds ballRect, ballVel, paddles and goals
+    -   receives paddlePos information from clients asynchronously
+    -   updates (move ball + collision check) and sends match info (ballPos, ballVel, score, remote_paddle) to both clients at twice the FPS
+        of the match (fixed 120/240Hz at the moment)
+2.  remove shared game logic functionality from clients:
+    -   holds ballRect, paddles, and goals
+    -   updates local paddle based on user input and sends this info to the server asynchronously
+    -   reads incoming game_info from the server and updates ballPos, ballVel, remote_paddle and score accordingly

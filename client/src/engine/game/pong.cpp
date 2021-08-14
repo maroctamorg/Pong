@@ -50,11 +50,6 @@ void Ball::setVel(double x, double y) {
     this->bVel.y = y;
 }
 
-void Ball::move(){
-    bRect.x += bVel.x;
-    bRect.y += bVel.y;
-}
-
 void Ball::display(SDL_Renderer *renderer, const SDL_Rect &window_rect) {
     // SDL_Rect target = {
     //     bRect.x * window_rect.w,
@@ -97,90 +92,6 @@ void Paddle::display(SDL_Renderer *renderer, const SDL_Rect& window, bool remote
     SDL_RenderFillRect(renderer, &padRect);
 }
 
-bool checkRelCollision(GraphicsContext* context, Rect r_rect1, Rect r_rect2) {
-    SDL_Rect test { 0, 0, context->getWidth(), context->getHeight() };
-    context = nullptr;
-    SDL_Rect rect1 = r_rect1*test;
-    SDL_Rect rect2 = r_rect2*test;
-    return SDL_HasIntersection(&rect1, &rect2);
-}
-
-void Game::checkCollision() {
-    // CHECK FOR GOALS
-    Rect& bRect = this->ball.getRect();
-    Point& bVel = this->ball.getVel();
-    if(checkRelCollision(this->context.get(), bRect, this->lcl_goal)) {
-        score[1] += 1;
-        bRect = this->ball.b_inRect;
-        bVel = this->ball.b_inVel;
-    }
-    // else if (checkRelCollision(this->context.get(), bRect, this->rmt_goal)) {
-    //     score[0] += 1;
-    //     bRect = this->ball.b_inRect;
-    //     bVel = {-this->ball.b_inVel.x, -this->ball.b_inVel.y};
-    // }
-
-    // CHECK FOR BOUNCE ON EDGES
-    if (bRect.x >= 1) {
-        bRect.x = 1;
-        bVel.x = -bVel.x;
-    } else if (bRect.x <= 0) {
-        bRect.x = 0;
-        bVel.x = -bVel.x;
-    }
-
-    if (bRect.y >= 1) {
-        bRect.y = 1;
-        bVel.y = -bVel.y;
-    } else if (bRect.y <= 0) {
-        bRect.y = 0;
-        bVel.y = -bVel.y;
-    }
-
-    Rect& lcl_pad_pos = this->lcl_paddle.getRect();
-    Rect& rmt_pad_pos = this->rmt_paddle.getRect();
-
-    // CHECK FOR LOCAL ---AND REMOTE--- PADDLE COLLISIONS
-    if (checkRelCollision(this->context.get(), bRect, lcl_pad_pos)) {
-        if(bRect.x < lcl_pad_pos.x + static_cast<int>(lcl_pad_pos.w/2)) {
-            bRect.x = lcl_pad_pos.x - bRect.w;
-            bVel.x = bVel.x >= 0 ? -bVel.x : bVel.x;
-        } else {
-            bRect.x = lcl_pad_pos.x + lcl_pad_pos.w;
-            bVel.x = bVel.x >= 0 ? bVel.x : -bVel.x;
-        }
-        if (lcl_pad_pos.y <= 0.2) {
-            bVel.y = bVel.y >= 0 ? (bVel.y == 0 ? this->ball.b_inVel.x : bVel.y) : -bVel.y;
-        } else if (lcl_pad_pos.y > 0.8) {
-            bVel.y = bVel.y >= 0 ? (bVel.y == 0 ? -this->ball.b_inVel.x : -bVel.y) : bVel.y;
-        }
-    }
-    // else if (checkRelCollision(this->context.get(), bRect, rmt_pad_pos)) {
-    //     if(bRect.x < rmt_pad_pos.x + static_cast<int>(rmt_pad_pos.w/2)) {
-    //         bRect.x = rmt_pad_pos.x - bRect.w;
-    //         bVel.x = bVel.x >= 0 ? -bVel.x : bVel.x;
-    //     } else {
-    //         bRect.x = rmt_pad_pos.x + rmt_pad_pos.w;
-    //         bVel.x = bVel.x >= 0 ? bVel.x : -bVel.x;
-    //     }
-    //     if (rmt_pad_pos.y <= 0.5) {
-    //         bVel.y = bVel.y >= 0 ? (bVel.y == 0 ? this->ball.b_inVel.x : bVel.y) : -bVel.y;
-    //     } else if (rmt_pad_pos.y > 0.5) {
-    //         bVel.y = bVel.y >= 0 ? (bVel.y == 0 ? -this->ball.b_inVel.x : -bVel.y) : bVel.y;
-    //     }
-    // }
-}
-
-void Game::update(Pos lcl_pos, Pos rmt_pos, Pos ballPos, Pos ballVel) {
-    lcl_paddle.move(lcl_pos, false);
-    rmt_paddle.move(rmt_pos, true);
-    ball.setPos(ballPos.x, ballPos.y);
-    ball.setVel(ballVel.x, ballVel.y);
-    ball.move();
-
-    this->checkCollision();
-}
-
 void Game::display() {
     SDL_Rect window_rect {0, 0, this->context->getWidth(), this->context->getHeight()};
     
@@ -207,7 +118,7 @@ void Game::display() {
 
 std::string custom_struct_utils::toString(Game_Info info) {
     std::ostringstream oss;
-    oss << "\ndone: " << (info.done ? "true" : "false") << ",\tscore: " << info.score << "\nracket:\tx: " << info.racketPos.x << ", y: " << info.racketPos.y << '\n';
+    oss << "\ndone: " << (info.done ? "true" : "false") << ",\tscore2: " << info.score2 << ",\tscore1: " << info.score1 << "\nracket:\tx: " << info.racketPos.x << ", y: " << info.racketPos.y << '\n';
     return oss.str();
 }
 
@@ -239,10 +150,12 @@ bool Game::start() {
                 break;
             case (STATE::GAME_INFO) :
                 // std::cout << "Received game info from server: " << custom_struct_utils::toString(sData) << '\n';
+                done = sData.done;
+                score[0] = sData.score1;
+                score[1] = sData.score2;
                 rmt_cursor_pos = sData.racketPos;
                 ballPos = sData.ballPos;
                 ballVel = sData.ballVel;
-                //checkBufferBallCollisions
                 counter = -1;
                 break;
             default :
@@ -261,9 +174,10 @@ bool Game::start() {
         Timer gLoop;
         while(!done) {
             // UPDATE
-            this->update(lcl_cursor_pos, rmt_cursor_pos, ballPos, ballVel);
-            ballPos = { this->ball.getRect().x, this->ball.getRect().y };
-            ballVel = { this->ball.getVel().x, this->ball.getVel().y };
+            this->lcl_paddle.move(lcl_cursor_pos, false);
+            this->rmt_paddle.move(rmt_cursor_pos, true);
+            this->ball.setPos(ballPos.x, ballPos.y);
+            this->ball.setVel(ballVel.x, ballVel.y);
             // DISPLAY
             this->display();
 
@@ -303,7 +217,8 @@ bool Game::start() {
                 // POST LOCAL DATA TO SERVER
                 lData.done = done;
                 lData.racketPos = lcl_cursor_pos;
-                lData.score = this->score[0];
+                lData.score1 = this->score[0];
+                lData.score2 = this->score[1];
                 lData.ballPos = ballPos;
                 lData.ballVel = ballVel;
                 connection->SendGameInfo<Game_Info>(&lData);

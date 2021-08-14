@@ -23,9 +23,9 @@ typedef struct {
 
 typedef struct {
 	bool done {false};
+	int score1 {0}, score2 {0};
 	Pos racketPos {0.5, 0.5};
-	int score {0};
-    Pos ballPos {0.4875, 0.4875 };
+    Pos ballPos {0.4875, 0.4875};
     Pos ballVel {0.025, 0.025};
 } Game_Info;
 
@@ -83,7 +83,6 @@ public:
     void setPos(double x, double y);
     void setVel(double x, double y);
 
-    void move();
     void display(SDL_Renderer *renderer, const SDL_Rect &window_rect);
 };
 
@@ -130,8 +129,6 @@ public:
         :   context(context), connection(connection), background({0, 0, context->getWidth(), context->getHeight()}), ball(b_inVel) {}
 
 public:
-    void checkCollision();
-    void update(Pos lcl_pos, Pos rmt_pos, Pos ballPos, Pos ballVel);
     void display();
     bool start();
 };

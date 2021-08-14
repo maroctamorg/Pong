@@ -18,6 +18,9 @@ public:
     static std::shared_ptr<InputField> input_field;
     static std::shared_ptr<Layout> input_button_layout;
     static std::shared_ptr<Button> input_button;
+
+    // TEXT
+    static std::shared_ptr<TextBox> text;
     
     static std::shared_ptr<Menu> menu;
 

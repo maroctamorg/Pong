@@ -14,6 +14,9 @@ std::shared_ptr<InputField>  Test_Menu::input_field          { nullptr };
 std::shared_ptr<Layout>      Test_Menu::input_button_layout  { nullptr };
 std::shared_ptr<Button>      Test_Menu::input_button         { nullptr };
 
+// TEXT
+std::shared_ptr<TextBox>     Test_Menu::text                 { nullptr };
+
 std::shared_ptr<Menu>        Test_Menu::menu                 { nullptr };
 
 
@@ -66,7 +69,8 @@ const std::shared_ptr<Menu> Test_Menu::construct(std::shared_ptr<GraphicsContext
     form_layout->placeUI_Element(input_field, 1);
     pannel_layout->placeUI_Element(form_layout, 1);
 
-    pannel_layout->placeUI_Element(std::make_shared<TextBox>(context, large, font, 15, font_color, ALIGN_X::CENTER, ALIGN_Y::CENTER), 2);
+    text = std::make_shared<TextBox>(context, "Enter a username to join a random session...", font, 15, font_color, ALIGN_X::CENTER, ALIGN_Y::CENTER);
+    pannel_layout->placeUI_Element(text, 2);
     main_layout->placeUI_Element(std::make_shared<Pannel>(context, pannel_layout, SDL_Color({24, 43, 100, 255})), 0);
     // main_layout->placeUI_Element(new Pannel(context, nullptr, SDL_Color({24, 43, 100, 255})), 0);
     menu = std::make_shared<Menu>(context, handler, main_layout, SDL_Color({255, 255, 255, 255}));
