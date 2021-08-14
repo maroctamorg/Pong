@@ -149,9 +149,9 @@ void Game::checkCollision() {
             bRect.x = lcl_pad_pos.x + lcl_pad_pos.w;
             bVel.x = bVel.x >= 0 ? bVel.x : -bVel.x;
         }
-        if (lcl_pad_pos.y <= 0.5) {
+        if (lcl_pad_pos.y <= 0.2) {
             bVel.y = bVel.y >= 0 ? (bVel.y == 0 ? this->ball.b_inVel.x : bVel.y) : -bVel.y;
-        } else if (lcl_pad_pos.y > 0.5) {
+        } else if (lcl_pad_pos.y > 0.8) {
             bVel.y = bVel.y >= 0 ? (bVel.y == 0 ? -this->ball.b_inVel.x : -bVel.y) : bVel.y;
         }
     }
@@ -242,7 +242,7 @@ bool Game::start() {
                 rmt_cursor_pos = sData.racketPos;
                 ballPos = sData.ballPos;
                 ballVel = sData.ballVel;
-                this->checkCollision();
+                //checkBufferBallCollisions
                 counter = -1;
                 break;
             default :
