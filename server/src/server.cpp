@@ -145,7 +145,7 @@ int main() {
 			Timer loop;
 			while(!done) {
 				done = server.update();
-				std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(1000*(1.0/420 - loop.elapsed()))));
+				std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(1000*(1.0/60 - loop.elapsed()))));
 				loop.reset();
 			}
 		}

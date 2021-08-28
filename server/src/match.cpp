@@ -109,7 +109,7 @@ void Match::send(CustomServer* server) {
 
     olc::net::message<CustomMsgTypes> message2;
     message2.header.id = CustomMsgTypes::GameInfo;
-    game_info = {done, score[1], score[0], Pos({1.0 - rackets[0].pos.x, rackets[0].pos.y}), ball.rect.pos, {-ball.vel.x, ball.vel.y}};
+    game_info = {done, score[1], score[0], Pos({1.0 - rackets[0].pos.x, rackets[0].pos.y}), {1-ball.rect.pos.x, ball.rect.pos.y}, {-ball.vel.x, ball.vel.y}};
     message2 << game_info;
     server->MessageClient(players[1]->getConnection(), message2);
 }

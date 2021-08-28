@@ -1,0 +1,29 @@
+CC = g++
+CFLAGS = -std=c++17
+INCLUDE = -I/usr/include/asio-1.18.2/include
+LINKER_FLAGS = -pthread
+SOURCES = server.cpp match.cpp session.cpp
+SOURCE_OBJECT_FILES = $(shell basename -a ${SOURCES:.cpp=.o})
+TARGET = pong_server
+
+all: build run
+
+build: compile link
+
+compile:
+	@echo "\nCompiling Server..."
+	${CC} -c $(patsubst %, src/%, $(SOURCES)) ${INCLUDE} ${CFLAGS}
+	mv ${SOURCE_OBJECT_FILES} build/
+
+link:
+	@echo "\nLinking App..."
+	${CC} -o ${TARGET} $(patsubst %, build/%, ${SOURCE_OBJECT_FILES}) ${LINKER_FLAGS}
+	mv ${TARGET} build/
+
+run:
+	@echo "\nRunning App..."
+	build/${TARGET}
+
+cleanup:
+	@echo "\nCleaning up App..."
+	rm $(patsubst %, build/%, ${SOURCE_OBJECT_FILES})
