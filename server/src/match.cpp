@@ -9,11 +9,6 @@ std::string custom_struct_utils::toString(Game_Info info) {
 
 std::shared_ptr<olc::net::connection<CustomMsgTypes>> Player::getConnection() const { return client; }
 
-void Player::update(Pos racket, int score) {
-    this->racket = racket;
-    this->score = score;
-}
-
 int Player::GetID() const { return client->GetID(); }
 
 bool check4EdgeCollision(Rect rect1, Rect rect2) {
@@ -59,7 +54,7 @@ void Match::checkCollision() {
 
     // CHECK FOR PADDLE COLLISIONS
     if (checkRelCollision(ball.rect, rackets[0])) {
-        if(ball.rect.pos.x < rackets[0].pos.x + static_cast<int>(rackets[0].w/2)) {
+        if(ball.rect.pos.x <= rackets[0].pos.x + static_cast<int>(rackets[0].w/2)) {
             ball.rect.pos.x = rackets[0].pos.x - ball.rect.w;
             ball.vel.x = ball.vel.x >= 0 ? -ball.vel.x : ball.vel.x;
         } else {
@@ -68,21 +63,21 @@ void Match::checkCollision() {
         }
         if (rackets[0].pos.y <= 0.2) {
             ball.vel.y = ball.vel.y >= 0 ? (ball.vel.y == 0 ? this->b_inVel.x : ball.vel.y) : -ball.vel.y;
-        } else if (rackets[0].pos.y > 0.8) {
+        } else if (rackets[0].pos.y >= 0.8) {
             ball.vel.y = ball.vel.y >= 0 ? (ball.vel.y == 0 ? -this->b_inVel.x : -ball.vel.y) : ball.vel.y;
         }
     }
     else if (checkRelCollision(ball.rect, rackets[1])) {
-        if(ball.rect.pos.x < rackets[1].pos.x + static_cast<int>(rackets[1].w/2)) {
+        if(ball.rect.pos.x <= rackets[1].pos.x + static_cast<int>(rackets[1].w/2)) {
             ball.rect.pos.x = rackets[1].pos.x - ball.rect.w;
             ball.vel.x = ball.vel.x >= 0 ? -ball.vel.x : ball.vel.x;
         } else {
             ball.rect.pos.x = rackets[1].pos.x + rackets[1].w;
             ball.vel.x = ball.vel.x >= 0 ? ball.vel.x : -ball.vel.x;
         }
-        if (rackets[1].pos.y <= 0.5) {
+        if (rackets[1].pos.y <= 0.2) {
             ball.vel.y = ball.vel.y >= 0 ? (ball.vel.y == 0 ? this->b_inVel.x : ball.vel.y) : -ball.vel.y;
-        } else if (rackets[1].pos.y > 0.5) {
+        } else if (rackets[1].pos.y >= 0.8) {
             ball.vel.y = ball.vel.y >= 0 ? (ball.vel.y == 0 ? -this->b_inVel.x : -ball.vel.y) : ball.vel.y;
         }
     }
@@ -91,8 +86,9 @@ void Match::checkCollision() {
 void Match::updateRacket(int id, Pos racketPos) {
     try {
         int index = id_to_index.at(id);
-        rackets[index].pos = racketPos;
+        rackets[index] = {( index == 0 ? racketPos : Pos({ 1.0 - racketPos.x, racketPos.y }) ), rackets[index].w, rackets[index].h};
     } catch (std::exception e) {
+        std::cout << "Unable to find index corresponding to user id passed in as an argument!\n";
         return;
     }
 }
@@ -107,13 +103,13 @@ void Match::update() {
 void Match::send(CustomServer* server) {
     olc::net::message<CustomMsgTypes> message1;
     message1.header.id = CustomMsgTypes::GameInfo;
-    Game_Info game_info {done, score[0], score[1], Pos({1 - rackets[1].pos.x, rackets[1].pos.y}), ball.rect.pos, ball.vel};
+    Game_Info game_info {done, score[0], score[1], rackets[1].pos, ball.rect.pos, ball.vel};
     message1 << game_info;
     server->MessageClient(players[0]->getConnection(), message1);
 
     olc::net::message<CustomMsgTypes> message2;
     message2.header.id = CustomMsgTypes::GameInfo;
-    game_info = {done, score[1], score[0], Pos({1 - rackets[0].pos.x, rackets[0].pos.y}), ball.rect.pos, {-ball.vel.x, ball.vel.y}};
+    game_info = {done, score[1], score[0], Pos({1.0 - rackets[0].pos.x, rackets[0].pos.y}), ball.rect.pos, {-ball.vel.x, ball.vel.y}};
     message2 << game_info;
-    server->MessageClient(players[1]->getConnection(), message1);
+    server->MessageClient(players[1]->getConnection(), message2);
 }

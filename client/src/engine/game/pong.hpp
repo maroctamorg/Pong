@@ -22,15 +22,20 @@ typedef struct {
 } Pos;
 
 typedef struct {
+    bool done {false};
+    Pos racketPos { 0.5, 0.5};
+} Local_Data;
+
+typedef struct {
 	bool done {false};
 	int score1 {0}, score2 {0};
 	Pos racketPos {0.5, 0.5};
     Pos ballPos {0.4875, 0.4875};
     Pos ballVel {0.025, 0.025};
-} Game_Info;
+} Server_Data;
 
 namespace custom_struct_utils {
-	std::string toString(Game_Info info);
+	std::string toString(Server_Data info);
 }
 
 class Point {

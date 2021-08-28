@@ -116,7 +116,7 @@ void Game::display() {
     SDL_RenderPresent(this->context->renderer);
 }
 
-std::string custom_struct_utils::toString(Game_Info info) {
+std::string custom_struct_utils::toString(Server_Data info) {
     std::ostringstream oss;
     oss << "\ndone: " << (info.done ? "true" : "false") << ",\tscore2: " << info.score2 << ",\tscore1: " << info.score1 << "\nracket:\tx: " << info.racketPos.x << ", y: " << info.racketPos.y << '\n';
     return oss.str();
@@ -129,13 +129,22 @@ bool Game::start() {
     Pos ballVel { this->ball.getVel().x, this->ball.getVel().y };
     bool done {false};
 
-    std::thread server_update_thr = std::thread([this, &done, &rmt_cursor_pos, &ballPos, &ballVel, connection { this->connection }]() mutable {
+    std::thread server_update_thr = std::thread([this, &done, &lcl_cursor_pos, &rmt_cursor_pos, &ballPos, &ballVel, connection { this->connection }]() mutable {
+        Server_Data sData;
+        Local_Data lData;
         STATE state { STATE::START };
-        Game_Info sData;
         int counter {-1};
         Timer sLoop;
         while(!done) {
             counter++;
+            // POST LOCAL DATA TO SERVER
+            lData.done = done;
+            lData.racketPos = lcl_cursor_pos;
+            // lData.score1 = this->score[0];
+            // lData.score2 = this->score[1];
+            // lData.ballPos = ballPos;
+            // lData.ballVel = ballVel;
+            connection->SendGameInfo<Local_Data>(&lData);
             state = connection->handleIncoming(&sData);
             switch(state) {
             case (STATE::QUIET) :
@@ -165,25 +174,25 @@ bool Game::start() {
 
             // consistent 240 Hz communication
             // std::cout << "server update thread elapsed time: " << sLoop.elapsed() << '\n';
-            std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(1000*(1.0/240 - sLoop.elapsed()))));
+            std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(1000*(1.0/120 - sLoop.elapsed()))));
             sLoop.reset();
         }
     });
 
-    std::thread display_thr = std::thread([this, &done, &lcl_cursor_pos, &rmt_cursor_pos, &ballPos, &ballVel]() {
+    std::thread display_thr = std::thread([this, &done, &lcl_cursor_pos, &rmt_cursor_pos, &ballPos, &ballVel]() mutable {
         Timer gLoop;
         while(!done) {
             // UPDATE
             this->lcl_paddle.move(lcl_cursor_pos, false);
             this->rmt_paddle.move(rmt_cursor_pos, true);
             this->ball.setPos(ballPos.x, ballPos.y);
-            this->ball.setVel(ballVel.x, ballVel.y);
+            // this->ball.setVel(ballVel.x, ballVel.y);
             // DISPLAY
             this->display();
 
             // wait appropriate time - 120FPS
             // std::cout << "display thread elapsed time: " << gLoop.elapsed() << '\n';
-            std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(1000*(1.0/120 - gLoop.elapsed()))));
+            std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(1000*(1.0/60 - gLoop.elapsed()))));
             // reset timer
             gLoop.reset();
         }
@@ -192,7 +201,6 @@ bool Game::start() {
     // GET USER INPUT
     int x, y;
     SDL_Event event;
-    Game_Info lData;
     while(!done) {
         if(!SDL_PollEvent(&event))
             continue;
@@ -213,15 +221,6 @@ bool Game::start() {
                 lcl_cursor_pos.x = (1.0*x) / context->getWidth();
                 lcl_cursor_pos.y = (1.0*y) / context->getHeight();
                 // std::cout << "Mouse State obtained: (" << cursorPos.x << ", "<< cursorPos.y << ")\n";
-
-                // POST LOCAL DATA TO SERVER
-                lData.done = done;
-                lData.racketPos = lcl_cursor_pos;
-                lData.score1 = this->score[0];
-                lData.score2 = this->score[1];
-                lData.ballPos = ballPos;
-                lData.ballVel = ballVel;
-                connection->SendGameInfo<Game_Info>(&lData);
                 break;
             }
         }

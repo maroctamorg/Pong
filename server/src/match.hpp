@@ -4,11 +4,6 @@
 #include "extern.hpp"
 
 typedef struct {
-	double x;
-	double y;
-} Pos;
-
-typedef struct {
     Pos pos;
     double w, h;
 } Rect;
@@ -34,14 +29,11 @@ class Player {
 private:
 	std::shared_ptr<olc::net::connection<CustomMsgTypes>> client;
 	std::string username;
-	int score;
-	Pos racket;
 public:
 	Player(std::shared_ptr<olc::net::connection<CustomMsgTypes>> connection, std::string username)
-		:	client {connection}, username { username }, score{0}, racket({0.05, 0.475}) {}
+		:	client {connection}, username { username } {}
 	
 	std::shared_ptr<olc::net::connection<CustomMsgTypes>> getConnection() const;
-	void update(Pos racket, int score);
 	int GetID() const;
 };
 
@@ -61,9 +53,9 @@ private:
     int score[2];
     Rect goals[2];
     Rect rackets[2];
-    Player* players[2];
+    std::shared_ptr<Player> players[2];
 public:
-    Match(Player* player1, Player* player2)
+    Match(std::shared_ptr<Player> player1, std::shared_ptr<Player> player2)
         :   id_to_index {   std::pair(player1->GetID(), 0), std::pair(player2->GetID(), 1)  },
             ball        {   b_inRect, b_inVel   },
             score       {   0, 0    },

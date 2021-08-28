@@ -23,4 +23,14 @@ enum class CustomMsgTypes : uint32_t
 	ErrorMessage,
 };
 
+typedef struct {
+	double x;
+	double y;
+} Pos;
+
+typedef struct {
+	bool done {false};
+	Pos racketPos {0.5, 0.5};
+} Player_Data;
+
 #endif

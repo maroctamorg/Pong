@@ -41,11 +41,11 @@ public:
 	void JoinCustomSession(std::string session_id);
 
 	template <typename Local_Info>
-	void SendGameInfo(Local_Info* server_info) {
-		if(!server_info) return;
+	void SendGameInfo(Local_Info* local_info) {
+		if(!local_info) return;
 		olc::net::message<CustomMsgTypes> msg;
 		msg.header.id = CustomMsgTypes::GameInfo;
-		msg << *server_info;
+		msg << *local_info;
 		// std::cout << "Sending server_info data:" << custom_struct_utils::toString(*server_info);
 		Send(msg);
 	}
