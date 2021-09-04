@@ -112,6 +112,7 @@ void Game::display() {
     ball.display(this->context->renderer, window_rect);
     lcl_paddle.display(this->context->renderer, window_rect, false);
     rmt_paddle.display(this->context->renderer, window_rect, true);
+    // score.display(this->context->renderer, window_rect, true);
 
     SDL_RenderPresent(this->context->renderer);
 }
@@ -180,7 +181,7 @@ bool Game::start() {
     });
 
     std::thread display_thr = std::thread([this, &done, &lcl_cursor_pos, &rmt_cursor_pos, &ballPos, &ballVel]() mutable {
-        Timer gLoop;
+        Timer dLoop;
         while(!done) {
             // UPDATE
             this->lcl_paddle.move(lcl_cursor_pos, false);
@@ -192,9 +193,9 @@ bool Game::start() {
 
             // wait appropriate time - 120FPS
             // std::cout << "display thread elapsed time: " << gLoop.elapsed() << '\n';
-            std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(1000*(1.0/60 - gLoop.elapsed()))));
+            std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(1000*(1.0/60 - dLoop.elapsed()))));
             // reset timer
-            gLoop.reset();
+            dLoop.reset();
         }
     });
 
