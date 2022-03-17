@@ -1,12 +1,12 @@
 #include "pong.hpp"
 
 SDL_Point Point::getSDLPoint() { return point; }
-SDL_Point Point::updatePos(std::shared_ptr<GraphicsContext> context) {
+SDL_Point Point::updatePos(std::shared_ptr<Graphics_Context> context) {
     this->point = { static_cast<int>(x*context->getWidth()), static_cast<int>(y*context->getHeight())};
     return this->point;
 }
 
-Point::Point(std::shared_ptr<GraphicsContext> context, double x, double y)
+Point::Point(std::shared_ptr<Graphics_Context> context, double x, double y)
     :   x{x}, y{y}, point{static_cast<int>(x*context->getWidth()), static_cast<int>(y*context->getHeight())} {}
 Point::Point(double x, double y)
     :   x{x}, y{y}, point{0, 0} {}
@@ -16,12 +16,12 @@ SDL_Point operator*(const Point& point, const SDL_Rect& context) {
 }
 
 SDL_Rect Rect::getSDLRect() { return rect; }
-SDL_Rect Rect::updatePos(std::shared_ptr<GraphicsContext> context) {
+SDL_Rect Rect::updatePos(std::shared_ptr<Graphics_Context> context) {
     this->rect = {static_cast<int>(x*context->getWidth()), static_cast<int>(y*context->getHeight()), static_cast<int>(w*context->getWidth()), static_cast<int>(h*context->getHeight())};
     return this->rect;
 }
 
-Rect::Rect(std::shared_ptr<GraphicsContext> context, double x, double y, double w, double h)
+Rect::Rect(std::shared_ptr<Graphics_Context> context, double x, double y, double w, double h)
     :   x{x}, y{y}, w{w}, h{h}, rect{static_cast<int>(x*context->getWidth()), static_cast<int>(y*context->getHeight()), static_cast<int>(w*context->getWidth()), static_cast<int>(h*context->getHeight())} {}
 Rect::Rect(double x, double y, double w, double h)
     :   x{x}, y{y}, w{w}, h{h}, rect{0, 0, 0, 0} {}

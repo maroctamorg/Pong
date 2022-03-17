@@ -7,8 +7,7 @@
 #include "../../../dependencies/nlohmann/json.hpp"
 #include "../../services/client.hpp"
 #include "../../utilities/timer.hpp"
-#include "../graphics/graphics_engine.hpp"
-#include "../ui/ui_engine.hpp"
+#include "../../ui/ui.hpp"
 
 using JSON = nlohmann::json;
 
@@ -45,11 +44,11 @@ private:
 public:
     double x, y;
     SDL_Point getSDLPoint();
-    SDL_Point updatePos(std::shared_ptr<GraphicsContext> context);
+    SDL_Point updatePos(std::shared_ptr<Graphics_Context> context);
     friend SDL_Point operator*(const Point& rect, const SDL_Rect& context); 
 
 public:
-    Point(std::shared_ptr<GraphicsContext> context, double x, double y);
+    Point(std::shared_ptr<Graphics_Context> context, double x, double y);
     Point(double x, double y);
 };
 
@@ -60,11 +59,11 @@ private:
 public:
     double x, y, w, h;
     SDL_Rect getSDLRect();
-    SDL_Rect updatePos(std::shared_ptr<GraphicsContext> context);
+    SDL_Rect updatePos(std::shared_ptr<Graphics_Context> context);
     friend SDL_Rect operator*(const Rect& rect, const SDL_Rect& context); 
 
 public:
-    Rect(std::shared_ptr<GraphicsContext> context, double x, double y, double w, double h);
+    Rect(std::shared_ptr<Graphics_Context> context, double x, double y, double w, double h);
     Rect(double x, double y, double w, double h);
 };
 
@@ -113,7 +112,7 @@ class Paddle {
 
 class Game {
 private:
-    std::shared_ptr<GraphicsContext> context;
+    std::shared_ptr<Graphics_Context> context;
     std::shared_ptr<CustomClient> connection;
 
     bool done { false };
@@ -128,9 +127,9 @@ private:
     Rect rmt_goal { 0.99, 0.2, 0.01, 0.6 };  // !!!!!!!!!!
 
 public:
-    Game(std::shared_ptr<GraphicsContext> context, std::shared_ptr<CustomClient> connection)
+    Game(std::shared_ptr<Graphics_Context> context, std::shared_ptr<CustomClient> connection)
         :   context(context), connection(connection), background({0, 0, context->getWidth(), context->getHeight()}) {}
-    Game(std::shared_ptr<GraphicsContext> context, std::shared_ptr<CustomClient> connection, Point b_inVel)
+    Game(std::shared_ptr<Graphics_Context> context, std::shared_ptr<CustomClient> connection, Point b_inVel)
         :   context(context), connection(connection), background({0, 0, context->getWidth(), context->getHeight()}), ball(b_inVel) {}
 
 public:

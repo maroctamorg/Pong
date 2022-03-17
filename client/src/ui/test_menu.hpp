@@ -15,17 +15,17 @@ public:
 
     // INPUT FORM
     static std::shared_ptr<Layout> form_layout;
-    static std::shared_ptr<InputField> input_field;
+    static std::shared_ptr<Input_Field> input_field;
     static std::shared_ptr<Layout> input_button_layout;
     static std::shared_ptr<Button> input_button;
 
     // TEXT
-    static std::shared_ptr<TextBox> text;
+    static std::shared_ptr<Text_Box> text;
     
     static std::shared_ptr<Menu> menu;
 
 public:
-    static const std::shared_ptr<Menu> construct(std::shared_ptr<GraphicsContext> context, std::shared_ptr<EventHandler> handler, std::weak_ptr<CustomClient> connection);
+    static const std::shared_ptr<Menu> construct(std::shared_ptr<Graphics_Context> context, std::shared_ptr<Event_Handler> handler, std::weak_ptr<CustomClient> connection);
 };
 
 #endif
