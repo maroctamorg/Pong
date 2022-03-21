@@ -15,7 +15,6 @@ enum class MODE {
 class MainMenu_Overlay final : public UI_Element {
 public:
     //UI
-
     std::shared_ptr<Menu> main;
     std::shared_ptr<Layout> main_l;
 
@@ -68,7 +67,7 @@ public:
                 try {
                     PORT = std::stoi(port);
                 } catch (...) {
-                    PORT = 3600;
+                    PORT = 3000;
                     std::cout << "Invalid PORT...\n";
                 }
             }
@@ -83,14 +82,21 @@ public:
                 std::cout << "unable to lock button in server_b callback\n";
             }
         });
-        e_handler->registerButtonEventCallback(server_b->getId(), [this, mode, username, IP, PORT]() mutable {
-            printf("button event callback - server\n");
+        e_handler->registerButtonEventCallback(server_b->getId(), [this, &mode, &username, &IP, &PORT]() mutable {
+            printf("button event callback - SERVER\n");
             srand(time(NULL));
             mode = MODE::SERVER;
             if(std::string name = username_f->getText(); !name.empty()) username = name;
             else username = "user" + (rand() % 100000 + 1);
             if(std::string ip = connectionIP_f->getText(); !ip.empty()) IP = ip;
-            if(std::string port = connectionPORT_f->getText(); !port.empty()) PORT = std::stoi(port);
+            if(std::string port = connectionPORT_f->getText(); !port.empty()) {
+                try {
+                    PORT = std::stoi(port);
+                } catch (...) {
+                    PORT = 3000;
+                    std::cout << "Invalid PORT...\n";
+                }
+            }
             return DEFEvent({EVENT_TYPES::NEXT, -1, NULL});
         });
 

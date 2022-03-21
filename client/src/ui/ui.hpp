@@ -16,25 +16,35 @@ namespace UI {
     std::shared_ptr<Event_Handler>      e_handler {nullptr};
 };
 
-#include "../services/client.hpp"
-#include "../game/pong.hpp"
-
 #include "splash.hpp"
 #include "mainmenu.hpp"
+#include "connect_screen.hpp"
+
+#include "../services/client.hpp"
+
+typedef struct {
+    double x;
+    double y;
+} Start_Game_Info;
 
 namespace UI {
     bool init() {
-        //define UI_Handler
-        handler = std::make_unique<UI_Handler>(W_W, W_H, "Pong++");
+        try {
+            //define UI_Handler
+            handler = std::make_unique<UI_Handler>(W_W, W_H, "Pong++");
 
-        std::cout << "Defined UI_Handler...\n";
+            std::cout << "Defined UI_Handler...\n";
 
-        //get default context and handlers
-        g_context = handler->getGraphicsContext();
-        a_handler = handler->getAnimationHandler();
-        e_handler = handler->getEventHandler();
+            //get default context and handlers
+            g_context = handler->getGraphicsContext();
+            a_handler = handler->getAnimationHandler();
+            e_handler = handler->getEventHandler();
 
-        std::cout << "Obtained default context and handlers...\n";
+            std::cout << "Obtained default context and handlers...\n";
+        } catch (...) {
+            return false;
+        }
+        return true;
     }
 
     void reset() {
