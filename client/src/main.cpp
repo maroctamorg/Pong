@@ -1,92 +1,71 @@
 #include "main.hpp"
 
-bool splash(UI_Handler* handler, std::shared_ptr<Graphics_Context> g_context, std::shared_ptr<Event_Handler> e_handler) {
-    //construct Main and Overlay objects
-    std::shared_ptr<Splash_Background> sp_background = std::make_shared<Splash_Background>(g_context);
-    std::shared_ptr<Splash_Overlay> sp_overlay = std::make_shared<Splash_Overlay>(g_context);
-
-    //setup Main and Overlay
-    std::cout << "Setting splash background and overlay...\n";
-    handler->setMain(sp_background);
-    handler->setOverlay(sp_overlay);
-
-    //setup event-handling and callbacks
-    std::cout << "Setting up event-handling and callbacks...\n";
-    
-    // * make fading splash screen animation * //
-
-    // uint hideshow_a_id = a_handler->add(std::make_unique<Overlay_HideShow_Animation>(overlay, handler->getLayout(), 1));
-    // e_handler->registerKeyCallback([a_handler, hideshow_a_id](SDL_Keycode keycode){
-    //     if(keycode == SDLK_TAB) a_handler->start(hideshow_a_id);
-    // });
-
-    //probably need to re-refactor...
-    e_handler->registerSDLEventCallback(SDL_KEYDOWN, []() {
-        return DEFEvent({EVENT_TYPES::NEXT, -1, NULL});
-    });
-
-    return handler->main();
-}
-
-bool mainmenu(UI_Handler* handler, std::shared_ptr<Graphics_Context> g_context, std::shared_ptr<Event_Handler> e_handler, MODE& mode, std::string& username, std::string& IP, short& PORT) {
-    //construct Main and Overlay objects
-    std::shared_ptr<Splash_Background> background = std::make_shared<Splash_Background>(g_context);
-    std::shared_ptr<MainMenu_Overlay> mainmenu_overlay = std::make_shared<MainMenu_Overlay>(g_context, e_handler, mode, username, IP, PORT);
-
-    //setup Main and Overlay
-    std::cout << "Setting main background and overlay...\n";
-    handler->setMain(background);
-    handler->setOverlay(mainmenu_overlay);
-
-    //setup event-handling and callbacks
-    std::cout << "Setting up event-handling and callbacks...\n";
-
-    return handler->main();
-}
-
 int main() {
-//INITIALIZE UI_HANDLER
 
-    //define UI_Handler
-    auto handler { std::make_unique<UI_Handler>(UI::W_W, UI::W_H, "Pong++") };
+    // init connection object
 
-    std::cout << "Defined UI_Handler...\n";
-
-    //get default context and handlers
-    std::shared_ptr<Graphics_Context> g_context = handler->getGraphicsContext();
-    std::shared_ptr<Animation_Handler> a_handler = handler->getAnimationHandler();
-    std::shared_ptr<Event_Handler> e_handler = handler->getEventHandler();
-
-    std::cout << "Obtained default context and handlers...\n";  
+    if(!UI::init()) {
+        std::cout << "Failed to initialize UI... exiting!\n";
+        return 1;
+    }; // initialize UI
 
     bool done { false };
     try {
-        while(!done) {
-            done = splash(handler.get(), g_context, e_handler);
-            if(done) break;
-            e_handler->deRegisterSDLEventCallback(SDL_KEYDOWN);
-            
-            handler->reset();
-            a_handler = handler->getAnimationHandler();
-            e_handler = handler->getEventHandler();
-
+        done = UI::splash();
+        UI::e_handler->deRegisterSDLEventCallback(SDL_KEYDOWN);
+        
+        while(!done) {            
             MODE mode {MODE::NONE};
             std::string username {"user0000"};
             std::string IP {"127.0.0.1"};
             short PORT {3600};
-
-            done = mainmenu(handler.get(), g_context, e_handler, mode, username, IP, PORT);
+            
+            UI::reset();
+            done = UI::mainmenu(mode, username, IP, PORT);
             if(done) break;
             printf("###################obtained:##################\n\tmode: %d\n\tusername: %s\n\tIP: %s\n\tPORT: %d\n\n", mode, username.c_str(), IP.c_str(), PORT);
             fflush(stdout);
             
-            // initMatch();
-            // done = match(connection);
-            // initResult();
-            // done = result();
+            std::string message {"Establishing a connection to server...\n"};
+            UI::reset();
+            std::thread connection_screen {
+                [&done, &message](){
+                    done = UI::connect(message); // how do I tell the UI to update the text? (just write it into update, might need mutex to ensure thread safety)
+                    // can simply not call default main and instead render, pollEvent and update directly
+                }
+            };
+            // what is above and below should go into connect (not necessarily into the UI_Handler)
+
+            // ESTABLISH A CONNECTION TO THE SERVER : DO THIS BEFORE STARTING OR UPDATE MESSAGE TO ESTABLISHING SESSION
+            std::shared_ptr<CustomClient> c { std::make_shared<CustomClient>() };
+            c->Connect(IP, PORT);
+            short count {0};
+            while(!c->IsConnected() && count < 5) {
+                std::cout << message << std::flush;
+                std::this_thread::sleep_for(2000ms);
+                count++;
+            } // attempts to establish server connection every 2s, 5 times
+            if(!c->IsConnected()) {
+                message = "Unable to establish a connection to server...";
+                std::cout << message << std::flush;
+                if(connection_screen.joinable()) connection_screen.join();
+            } else {
+                // establish session
+
+
+                // join connection screen
+                if(connection_screen.joinable()) connection_screen.join();
+            }
+
+            UI::reset();
+            done = UI::match(c); //synchronize start + hold match (pause overlay can be later implemented)
+
+            UI::reset();
+            done = UI::result(c); //display results of match, <allow replay with same user>, reset connection, send back to mainmenu or quit
         }
     } catch(...) {
         std::cerr << "Runtime exception thrown in main! Exiting...\n";
+        return 1;
     }
     // quit()
     return 0;

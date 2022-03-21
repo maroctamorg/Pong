@@ -5,9 +5,9 @@
 #include <chrono>
 
 #include "dependencies/nlohmann/json.hpp"
-#include "services/client.hpp"
-#include "utilities/timer.hpp"
-#include "ui/ui.hpp"
+#include "../services/client.hpp"
+#include "../utilities/timer.hpp"
+#include "../ui/ui.hpp"
 
 using JSON = nlohmann::json;
 
